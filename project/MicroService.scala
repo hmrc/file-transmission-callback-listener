@@ -37,7 +37,6 @@ trait MicroService {
       retrieveManaged := true,
       routesGenerator := StaticRoutesGenerator
     )
-    .settings(Repositories.playPublishingSettings : _*)
     .configs(IntegrationTest)
     .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
     .settings(
@@ -46,7 +45,6 @@ trait MicroService {
       addTestReportOption(IntegrationTest, "int-test-reports"),
       testGrouping in IntegrationTest := oneForkedJvmPerTest((definedTests in IntegrationTest).value),
       parallelExecution in IntegrationTest := false)
-    .settings(SbtBuildInfo(): _*)
     .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
     .settings(resolvers ++= Seq(
       Resolver.bintrayRepo("hmrc", "releases"),
@@ -60,21 +58,4 @@ private object TestPhases {
     tests map {
       test => new Group(test.name, Seq(test), SubProcess(ForkOptions(runJVMOptions = Seq("-Dtest.name=" + test.name))))
     }
-}
-
-private object Repositories {
-
-  import uk.gov.hmrc._
-  import PublishingSettings._
-  import NexusPublishing._
-
-  lazy val playPublishingSettings : Seq[sbt.Setting[_]] = sbtrelease.ReleasePlugin.releaseSettings ++ Seq(
-
-    credentials += SbtCredentials,
-
-    publishArtifact in(Compile, packageDoc) := false,
-    publishArtifact in(Compile, packageSrc) := false
-  ) ++
-    publishAllArtefacts ++
-    nexusPublishingSettings
 }
