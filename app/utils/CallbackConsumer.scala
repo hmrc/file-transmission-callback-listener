@@ -4,14 +4,14 @@ import model.{ListenerRequest, ListenerResponse}
 import play.api.Logger
 import play.api.libs.json.JsValue
 
-trait LogHelper {
+trait CallbackConsumer {
   def logSuccessfulResponse(listenerResponse: ListenerResponse): Unit
   def logHashError(listenerRequest: ListenerRequest, errorMsg: String): Unit
   def logInvalidJson(json: JsValue)
   def logInvalidBody(body: String)
 }
 
-class PlayLogHelper extends LogHelper {
+class PlayCallbackConsumer extends CallbackConsumer {
   override def logSuccessfulResponse(listenerResponse: ListenerResponse): Unit = {
     val logMsg = s"File upload notification received on callback URL. File reference: ${listenerResponse.reference}, " +
       s"file download URL: ${listenerResponse.downloadUrl}, file hash: ${listenerResponse.hash}"
@@ -29,6 +29,6 @@ class PlayLogHelper extends LogHelper {
   }
 
   override def logInvalidBody(body: String): Unit = {
-    Logger.info(s"Request body cannot be parsed as JSON, request body is: ${body.toString}")
+    Logger.error(s"Request body cannot be parsed as JSON, request body is: ${body.toString}")
   }
 }
