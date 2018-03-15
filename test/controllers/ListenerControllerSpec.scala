@@ -6,6 +6,7 @@ import java.net.URL
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import connectors.FileHashRetriever
+import model.{ListenerRequest, ListenerResponse}
 import org.mockito.Mockito
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{GivenWhenThen, Matchers}
@@ -13,8 +14,7 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Result
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.play.test.UnitSpec
-import utils.LogHelper
-import org.mockito.ArgumentMatchers.any
+import utils.CallbackConsumer
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
@@ -35,8 +35,8 @@ class ListenerControllerSpec extends UnitSpec with Matchers with GivenWhenThen w
   "ListenerController" should {
     "return OK and write to logs for correctly formatted POST" in {
       Given("a request containing correctly formatted JSON and a valid download URL")
-      val logger = mock[LogHelper]
-      val controller = new ListenerController(connector, logger)
+      val consumer = mock[CallbackConsumer]
+      val controller = new ListenerController(connector, consumer)
 
       val validJson: JsValue = Json.parse(
         """{
@@ -48,12 +48,8 @@ class ListenerControllerSpec extends UnitSpec with Matchers with GivenWhenThen w
 
       When("the POST endpoint is called")
       val response: Future[Result] = controller.listen()(request)
-      val awaited = Await.result(response, 2.seconds)
 
-      Then("the download URL, the file reference and the checksum should be written to the logs")
-      Mockito.verify(logger).logSuccessfulResponse(any())
-
-      And("the service should return OK")
+      Then("the service should return OK")
       status(response) shouldBe 200
 
       And("the download URL, the file reference and the checksum should be return as JSON")
@@ -63,12 +59,17 @@ class ListenerControllerSpec extends UnitSpec with Matchers with GivenWhenThen w
           |"downloadUrl": "http://my.download.url",
           |"hash": "e7e5955a9926ff43412fcb4ff4e65e68"
         }""".stripMargin)
+
+      And("the download URL, the file reference and the checksum should be sent to the consumer")
+      val awaited = Await.result(response, 2.seconds)
+      val listenerResponse = ListenerResponse("my-reference", new URL("http://my.download.url"), "e7e5955a9926ff43412fcb4ff4e65e68")
+      Mockito.verify(consumer).logSuccessfulResponse(listenerResponse)
     }
 
     "return InternalServiceError and write to logs for a file that cannot be hashed correctly" in {
       Given("a request containing correctly formatted JSON and a download URL that fails hashing")
-      val logger = mock[LogHelper]
-      val controller = new ListenerController(connector, logger)
+      val consumer = mock[CallbackConsumer]
+      val controller = new ListenerController(connector, consumer)
 
       val invalidJson: JsValue = Json.parse(
         """{
@@ -84,15 +85,16 @@ class ListenerControllerSpec extends UnitSpec with Matchers with GivenWhenThen w
       Then("the service should return InternalServerError")
       status(response) shouldBe 500
 
-      And("the download URL, the file reference and the error should be written to the logs")
+      And("the download URL, the file reference and the error should be sent to the consumer")
       val awaited = Await.result(response, 2.seconds)
-      Mockito.verify(logger).logHashError(any(), any())
+      val listenerRequest = ListenerRequest("my-reference", new URL("http://some.invalid.url"))
+      Mockito.verify(consumer).logHashError(listenerRequest, "This is an expected hashing exception")
     }
 
     "return BadRequest and write to logs for a file that contains invalid JSON" in {
       Given("a request containing incorrectly formatted JSON")
-      val logger = mock[LogHelper]
-      val controller = new ListenerController(connector, logger)
+      val consumer = mock[CallbackConsumer]
+      val controller = new ListenerController(connector, consumer)
 
       val invalidJson: JsValue = Json.parse(
         """{
@@ -108,15 +110,15 @@ class ListenerControllerSpec extends UnitSpec with Matchers with GivenWhenThen w
       Then("the service should return InternalServerError")
       status(response) shouldBe 400
 
-      And("the JSON should be written to the logs")
+      And("the JSON should be sent to the consumer")
       val awaited = Await.result(response, 2.seconds)
-      Mockito.verify(logger).logInvalidJson(any())
+      Mockito.verify(consumer).logInvalidJson(invalidJson)
     }
 
     "return BadRequest and write to logs for a file that contains invalid body" in {
       Given("a request containing body content that cannot be parsed as JSON")
-      val logger = mock[LogHelper]
-      val controller = new ListenerController(connector, logger)
+      val consumer = mock[CallbackConsumer]
+      val controller = new ListenerController(connector, consumer)
 
       val request = FakeRequest().withTextBody("This is not JSON")
 
@@ -126,9 +128,9 @@ class ListenerControllerSpec extends UnitSpec with Matchers with GivenWhenThen w
       Then("the service should return InternalServerError")
       status(response) shouldBe 400
 
-      And("the request body should be written to the logs")
+      And("the request body should be sent to the consumer")
       val awaited = Await.result(response, 2.seconds)
-      Mockito.verify(logger).logInvalidBody("This is not JSON")
+      Mockito.verify(consumer).logInvalidBody("This is not JSON")
     }
   }
 
