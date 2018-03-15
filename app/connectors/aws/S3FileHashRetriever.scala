@@ -5,19 +5,18 @@ import java.security.MessageDigest
 import javax.inject.Inject
 
 import connectors.FileHashRetriever
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import play.api.libs.ws.WSClient
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
-class S3FileHashRetriever @Inject()(httpClient: HttpClient)
+class S3FileHashRetriever @Inject()(wsClient: WSClient)
                                    (implicit ec: ExecutionContext) extends FileHashRetriever {
 
   override def fileHash(url: URL): Future[String] = {
-    implicit val hc = HeaderCarrier()
-    httpClient.GET(url.toString) flatMap { response =>
-      getMD5Hash(response.body.getBytes()) match {
+
+    wsClient.url(url.toString).get() flatMap { response =>
+      getMD5Hash(response.bodyAsBytes.toArray) match {
         case Success(hash) =>
           Future.successful(hash)
         case Failure(error) =>
