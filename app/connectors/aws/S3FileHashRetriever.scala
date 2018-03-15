@@ -14,7 +14,6 @@ class S3FileHashRetriever @Inject()(wsClient: WSClient)
                                    (implicit ec: ExecutionContext) extends FileHashRetriever {
 
   override def fileHash(url: URL): Future[String] = {
-
     wsClient.url(url.toString).get() flatMap { response =>
       getMD5Hash(response.bodyAsBytes.toArray) match {
         case Success(hash) =>
