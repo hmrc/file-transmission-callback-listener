@@ -4,15 +4,18 @@ import javax.inject.Inject
 
 import connectors.FileHashRetriever
 import model.{ListenerRequest, ListenerResponse}
+import org.joda.time.DateTime
 import play.api.libs.json.{JsError, JsSuccess, Json}
 import play.api.mvc.Results.EmptyContent
 import play.api.mvc.{Action, AnyContent, Controller}
-import utils.CallbackConsumer
+import utils.{CallbackConsumer, ResponseConsumer}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class ListenerController @Inject()(connector: FileHashRetriever,
-                                   consumer: CallbackConsumer)(implicit ec: ExecutionContext) extends Controller {
+                                   callbackConsumer: CallbackConsumer,
+                                   responseConsumer: ResponseConsumer
+                                  )(implicit ec: ExecutionContext) extends Controller {
 
   def listen(): Action[AnyContent] = Action.async { implicit request =>
     request.body.asJson match {
@@ -20,20 +23,20 @@ class ListenerController @Inject()(connector: FileHashRetriever,
         case JsSuccess(listenerRequest, _) =>
           connector.fileHash(listenerRequest.downloadUrl) map { md5 =>
             val response = ListenerResponse(listenerRequest.reference, listenerRequest.downloadUrl, md5)
-            consumer.logSuccessfulResponse(response)
+            callbackConsumer.logSuccessfulResponse(response)
+            responseConsumer.addResponse(response, DateTime.now())
             Ok(Json.toJson(response))
           } recover { case t: Throwable =>
-            consumer.logHashError(listenerRequest, t.getMessage)
+            callbackConsumer.logHashError(listenerRequest, t.getMessage)
             InternalServerError(EmptyContent())
           }
         case _: JsError =>
-          consumer.logInvalidJson(json)
+          callbackConsumer.logInvalidJson(json)
           Future.successful(BadRequest(EmptyContent()))
       }
       case None =>
-        consumer.logInvalidBody(request.body.asText.getOrElse("Could not retrieve request body"))
+        callbackConsumer.logInvalidBody(request.body.asText.getOrElse("Could not retrieve request body"))
         Future.successful(BadRequest(EmptyContent()))
     }
   }
 }
-
