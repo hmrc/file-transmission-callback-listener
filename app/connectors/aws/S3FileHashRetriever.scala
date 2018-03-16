@@ -5,6 +5,7 @@ import java.security.MessageDigest
 import javax.inject.Inject
 
 import connectors.FileHashRetriever
+import play.api.http.Status
 import play.api.libs.ws.WSClient
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -15,11 +16,15 @@ class S3FileHashRetriever @Inject()(wsClient: WSClient)
 
   override def fileHash(url: URL): Future[String] = {
     wsClient.url(url.toString).get() flatMap { response =>
-      getMD5Hash(response.bodyAsBytes.toArray) match {
-        case Success(hash) =>
-          Future.successful(hash)
-        case Failure(error) =>
-          Future.failed(new Exception(s"Unable to successfully create MD5 hash of file: ${error.getMessage}"))
+      response.status match {
+        case Status.OK => getMD5Hash(response.bodyAsBytes.toArray) match {
+          case Success(hash) =>
+            Future.successful(hash)
+          case Failure(error) =>
+            Future.failed(new Exception(s"Unable to successfully create MD5 hash of file: ${error.getMessage}"))
+        }
+        case statusNotOk =>
+          Future.failed(new Exception(s"File not successfully retrieved from S3, status was: $statusNotOk"))
       }
     }
   }
