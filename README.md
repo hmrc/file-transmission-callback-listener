@@ -13,9 +13,13 @@ This service will also run in the pre-production environments (Development, QA, 
 an uploaded file.
 
 ### Using the service
-The service has a single POST endpoint, which when hit will write to application logs, and will additionally calculate an MD5 hash of the downloadable file contents (this can be used to check that the file is as expected).
+#### POST to the service
+The service has a POST endpoint, which when hit will write to application logs, and will additionally calculate an MD5 hash of the downloadable file contents (this can be used to check that the file is as expected).
 
-Example POST request JSON body that will be sent to the service on ```http://localhost/upscan-listener/listen```
+POST request:
+URL: ```http://localhost:12345/upscan-listener/listen```
+
+Request body:
 ```
 {
     "reference": "my-reference",
@@ -23,9 +27,7 @@ Example POST request JSON body that will be sent to the service on ```http://loc
 }
 ```
 
-Once the file has been successfully transferred to the S3 bucket for download, a POST will be made by upscan-notify to upscan-listener, and this event will be written to the logs.
-
-Additionally, the service will respond to calls with the following response body if successful:
+Response body:
 ```
 {
     "reference": "my-reference",
@@ -34,8 +36,35 @@ Additionally, the service will respond to calls with the following response body
 }
 ```
 
+Once the file has been successfully transferred to the S3 bucket for download, a POST will be made by upscan-notify to upscan-listener, and this event will be written to the logs.
+
 If the end-to-end process has worked as expected, you should see the following in the upscan-listener application logs:
 > File upload notification received on callback URL. File reference: my-reference, file download URL: http://my.download.url, file hash: e7e5955a9926ff43412fcb4ff4e65e68
+
+#### GET list of recent callbacks
+The service has a GET endpoint, which can be used to query the successful callbacks that the service has made since 00:00 on the day queried. These calls are stored in local memory, meaning that when the app is restarted, the log will be lost. It will ONLY log successful calls, not any instances where there has been an error with the callback.
+
+GET request:
+URL: ```http://localhost:12345/upscan-listener/poll```
+
+Response body:
+```
+{
+    "currentDate": "2018-03-19",
+    "responses": [
+        {
+            "reference": "my-reference"",
+            "downloadUrl": "http://my.download.url",
+            "hash": "e7e5955a9926ff43412fcb4ff4e65e68"
+        },
+    {
+            "reference": "my-reference-2"",
+            "downloadUrl": "http://my.download.url-2",
+            "hash": "e7e5955a9926ff43412fcb4ff4e65e68"
+        }
+    ]
+}
+```
 
 ### Running locally
 Start your upscan-initiate service on port 12345 with the following command: ```sbt "run 12345"```
