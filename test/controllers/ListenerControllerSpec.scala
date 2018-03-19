@@ -1,12 +1,12 @@
 package controllers
 
-import java.io.File
 import java.net.URL
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import connectors.FileHashRetriever
 import model.{ListenerRequest, ListenerResponse}
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{GivenWhenThen, Matchers}
@@ -14,17 +14,13 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Result
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.play.test.UnitSpec
-import utils.CallbackConsumer
+import utils.{CallbackConsumer, ResponseConsumer}
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
-/**
-  * Created by joanna.pinto on 12/03/2018.
-  */
 class ListenerControllerSpec extends UnitSpec with Matchers with GivenWhenThen with MockitoSugar {
-
 
   implicit val actorSystem = ActorSystem()
   implicit val materializer = ActorMaterializer()
@@ -35,8 +31,9 @@ class ListenerControllerSpec extends UnitSpec with Matchers with GivenWhenThen w
   "ListenerController" should {
     "return OK and write to logs for correctly formatted POST" in {
       Given("a request containing correctly formatted JSON and a valid download URL")
-      val consumer = mock[CallbackConsumer]
-      val controller = new ListenerController(connector, consumer)
+      val callbackConsumer = mock[CallbackConsumer]
+      val responseConsumer = mock[ResponseConsumer]
+      val controller = new ListenerController(connector, callbackConsumer, responseConsumer)
 
       val validJson: JsValue = Json.parse(
         """{
@@ -60,16 +57,19 @@ class ListenerControllerSpec extends UnitSpec with Matchers with GivenWhenThen w
           |"hash": "e7e5955a9926ff43412fcb4ff4e65e68"
         }""".stripMargin)
 
-      And("the download URL, the file reference and the checksum should be sent to the consumer")
+      And("the download URL, the file reference and the checksum should be sent to the callbackConsumer")
       val awaited = Await.result(response, 2.seconds)
       val listenerResponse = ListenerResponse("my-reference", new URL("http://my.download.url"), "e7e5955a9926ff43412fcb4ff4e65e68")
-      Mockito.verify(consumer).logSuccessfulResponse(listenerResponse)
+      Mockito.verify(callbackConsumer).logSuccessfulResponse(listenerResponse)
+
+      And("the successful response should be added to the response consumer log")
+      Mockito.verify(responseConsumer).addResponse(any(), any())
     }
 
     "return InternalServiceError and write to logs for a file that cannot be hashed correctly" in {
       Given("a request containing correctly formatted JSON and a download URL that fails hashing")
-      val consumer = mock[CallbackConsumer]
-      val controller = new ListenerController(connector, consumer)
+      val callbackConsumer = mock[CallbackConsumer]
+      val controller = new ListenerController(connector, callbackConsumer, mock[ResponseConsumer])
 
       val invalidJson: JsValue = Json.parse(
         """{
@@ -85,16 +85,16 @@ class ListenerControllerSpec extends UnitSpec with Matchers with GivenWhenThen w
       Then("the service should return InternalServerError")
       status(response) shouldBe 500
 
-      And("the download URL, the file reference and the error should be sent to the consumer")
+      And("the download URL, the file reference and the error should be sent to the callbackConsumer")
       val awaited = Await.result(response, 2.seconds)
       val listenerRequest = ListenerRequest("my-reference", new URL("http://some.invalid.url"))
-      Mockito.verify(consumer).logHashError(listenerRequest, "This is an expected hashing exception")
+      Mockito.verify(callbackConsumer).logHashError(listenerRequest, "This is an expected hashing exception")
     }
 
     "return BadRequest and write to logs for a file that contains invalid JSON" in {
       Given("a request containing incorrectly formatted JSON")
-      val consumer = mock[CallbackConsumer]
-      val controller = new ListenerController(connector, consumer)
+      val callbackConsumer = mock[CallbackConsumer]
+      val controller = new ListenerController(connector, callbackConsumer, mock[ResponseConsumer])
 
       val invalidJson: JsValue = Json.parse(
         """{
@@ -112,13 +112,13 @@ class ListenerControllerSpec extends UnitSpec with Matchers with GivenWhenThen w
 
       And("the JSON should be sent to the consumer")
       val awaited = Await.result(response, 2.seconds)
-      Mockito.verify(consumer).logInvalidJson(invalidJson)
+      Mockito.verify(callbackConsumer).logInvalidJson(invalidJson)
     }
 
     "return BadRequest and write to logs for a file that contains invalid body" in {
       Given("a request containing body content that cannot be parsed as JSON")
-      val consumer = mock[CallbackConsumer]
-      val controller = new ListenerController(connector, consumer)
+      val callbackConsumer = mock[CallbackConsumer]
+      val controller = new ListenerController(connector, callbackConsumer, mock[ResponseConsumer])
 
       val request = FakeRequest().withTextBody("This is not JSON")
 
@@ -128,9 +128,9 @@ class ListenerControllerSpec extends UnitSpec with Matchers with GivenWhenThen w
       Then("the service should return InternalServerError")
       status(response) shouldBe 400
 
-      And("the request body should be sent to the consumer")
+      And("the request body should be sent to the callbackConsumer")
       val awaited = Await.result(response, 2.seconds)
-      Mockito.verify(consumer).logInvalidBody("This is not JSON")
+      Mockito.verify(callbackConsumer).logInvalidBody("This is not JSON")
     }
   }
 
@@ -138,8 +138,9 @@ class ListenerControllerSpec extends UnitSpec with Matchers with GivenWhenThen w
     override def fileHash(url: URL): Future[String] = {
       url.toString match {
         case "http://some.invalid.url" => Future.failed(new Exception("This is an expected hashing exception"))
-        case _ =>       Future.successful("e7e5955a9926ff43412fcb4ff4e65e68")
+        case _ => Future.successful("e7e5955a9926ff43412fcb4ff4e65e68")
       }
     }
   }
+
 }
