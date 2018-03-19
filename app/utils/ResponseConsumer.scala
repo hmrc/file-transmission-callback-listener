@@ -17,11 +17,13 @@ class InMemoryResponseConsumer(private val initialResponses: List[ListenerRespon
   private var responses: List[ListenerResponse] = initialResponses
 
   override def addResponse(response: ListenerResponse, currentDate: DateTime): Unit = {
-    if (currentDate.dayOfYear().get() > responsesDate.dayOfYear().get()) {
-      responsesDate = currentDate
-      responses = List(response)
-    } else {
-     responses = responses :+ response
+    synchronized {
+      if (currentDate.dayOfYear().get() > responsesDate.dayOfYear().get()) {
+        responsesDate = currentDate
+        responses = List(response)
+      } else {
+        responses = responses :+ response
+      }
     }
   }
 
