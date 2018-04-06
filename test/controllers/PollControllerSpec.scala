@@ -4,7 +4,7 @@ import java.net.URL
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import model.{ListenerResponse, ResponseLog}
+import model.{ListenerResponseSuccessfulUpload, QuarantinedFile, ResponseLog}
 import org.joda.time.DateTime
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{GivenWhenThen, Matchers}
@@ -28,15 +28,20 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
 
       Given("a controller and entries in the local log")
       val responseConsumer = new ResponseConsumer {
-        override def addResponse(response: ListenerResponse, currentDate: DateTime): Unit = ()
-
+        override def addResponse(response: ListenerResponseSuccessfulUpload, currentDate: DateTime): Unit = ()
+        override def addResponse(response: QuarantinedFile, currentDate: DateTime): Unit = ()
         override def retrieveResponses: ResponseLog = ResponseLog(
           currentDate = DateTime.parse("2018-03-16"),
-          responses = List(
-            ListenerResponse("my-first-reference", new URL("http://url.one"), "11111"),
-            ListenerResponse("my-second-reference", new URL("http://url.two"), "22222")
+          successfulResponses = List(
+            ListenerResponseSuccessfulUpload("my-first-reference", new URL("http://url.one"), "11111"),
+            ListenerResponseSuccessfulUpload("my-second-reference", new URL("http://url.two"), "22222")
+          ),
+          quarantineResponses = List(
+            QuarantinedFile("my-third-reference", "This file had a nasty virus")
           )
         )
+
+
       }
 
       val controller = new PollController(responseConsumer)
@@ -52,7 +57,7 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
         """
           |{
           |	"currentDate": "2018-03-16",
-          |	"responses": [{
+          |	"successfulResponses": [{
           |		"reference": "my-first-reference",
           |		"downloadUrl": "http://url.one",
           |		"hash": "11111"
@@ -60,6 +65,10 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
           |		"reference": "my-second-reference",
           |		"downloadUrl": "http://url.two",
           |		"hash": "22222"
+          |	}],
+          |	"quarantineResponses": [{
+          |		"reference": "my-third-reference",
+          |		"details": "This file had a nasty virus"
           |	}]
           |}
         """.stripMargin)
@@ -69,8 +78,9 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
 
       Given("a controller and NO entries in the local log")
       val responseConsumer = new ResponseConsumer {
-        override def addResponse(response: ListenerResponse, currentDate: DateTime): Unit = ()
-        override def retrieveResponses: ResponseLog = ResponseLog(DateTime.parse("2018-03-16"), Nil)
+        override def addResponse(response: ListenerResponseSuccessfulUpload, currentDate: DateTime): Unit = ()
+        override def addResponse(response: QuarantinedFile, currentDate: DateTime): Unit = ()
+        override def retrieveResponses: ResponseLog = ResponseLog(DateTime.parse("2018-03-16"), Nil, Nil)
       }
 
       val controller = new PollController(responseConsumer)
@@ -86,7 +96,8 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
         """
           |{
           |	"currentDate": "2018-03-16",
-          |	"responses": []
+          |	"successfulResponses":[],
+          | "quarantineResponses":[]
           |}
         """.stripMargin)
     }
