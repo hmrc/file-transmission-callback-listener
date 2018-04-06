@@ -5,7 +5,8 @@ import java.net.URL
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import connectors.FileHashRetriever
-import model.{ListenerRequest, ListenerResponse}
+import model.{ListenerResponseSuccessfulUpload, QuarantinedFile, UploadedFile}
+import org.joda.time.DateTime
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
 import org.scalatest.mockito.MockitoSugar
@@ -29,8 +30,8 @@ class ListenerControllerSpec extends UnitSpec with Matchers with GivenWhenThen w
   private val connector = new FileHashRetrieverImpl()
 
   "ListenerController" should {
-    "return OK and write to logs for correctly formatted POST" in {
-      Given("a request containing correctly formatted JSON and a valid download URL")
+    "return OK and write to logs for correctly formatted POST for successful upload" in {
+      Given("a request containing correctly formatted JSON and a valid download URL for successful upload")
       val callbackConsumer = mock[CallbackConsumer]
       val responseConsumer = mock[ResponseConsumer]
       val controller = new ListenerController(connector, callbackConsumer, responseConsumer)
@@ -59,15 +60,51 @@ class ListenerControllerSpec extends UnitSpec with Matchers with GivenWhenThen w
 
       And("the download URL, the file reference and the checksum should be sent to the callbackConsumer")
       val awaited = Await.result(response, 2.seconds)
-      val listenerResponse = ListenerResponse("my-reference", new URL("http://my.download.url"), "e7e5955a9926ff43412fcb4ff4e65e68")
+      val listenerResponse = ListenerResponseSuccessfulUpload("my-reference", new URL("http://my.download.url"), "e7e5955a9926ff43412fcb4ff4e65e68")
       Mockito.verify(callbackConsumer).logSuccessfulResponse(listenerResponse)
 
       And("the successful response should be added to the response consumer log")
-      Mockito.verify(responseConsumer).addResponse(any(), any())
+      Mockito.verify(responseConsumer).addResponse(any(): ListenerResponseSuccessfulUpload, any(): DateTime)
+    }
+
+    "return OK and write to logs for correctly formatted POST for quarantined upload" in {
+      Given("a request containing correctly formatted JSON and a valid download URL for quarantined upload")
+      val callbackConsumer = mock[CallbackConsumer]
+      val responseConsumer = mock[ResponseConsumer]
+      val controller = new ListenerController(connector, callbackConsumer, responseConsumer)
+
+      val validJson: JsValue = Json.parse(
+        """{
+          |"reference": "my-reference",
+          |"details": "This file upload was infected"
+        }""".stripMargin)
+
+      val request = FakeRequest().withJsonBody(validJson)
+
+      When("the POST endpoint is called")
+      val response: Future[Result] = controller.listen()(request)
+
+      Then("the service should return OK")
+      status(response) shouldBe 200
+
+      And("the download URL, the file reference and the checksum should be return as JSON")
+      Helpers.contentAsJson(response) shouldBe Json.parse(
+        """{
+          |"reference":"my-reference",
+          |"details":"This file upload was infected"
+          |}""".stripMargin)
+
+      And("the download URL, the file reference and the checksum should be sent to the callbackConsumer")
+      val awaited = Await.result(response, 2.seconds)
+      val quarantinedFile = QuarantinedFile("my-reference", "This file upload was infected")
+      Mockito.verify(callbackConsumer).logQuarantinedResponse(quarantinedFile)
+
+      And("the successful response should be added to the response consumer log")
+      Mockito.verify(responseConsumer).addResponse(any(): QuarantinedFile, any(): DateTime)
     }
 
     "return InternalServiceError and write to logs for a file that cannot be hashed correctly" in {
-      Given("a request containing correctly formatted JSON and a download URL that fails hashing")
+      Given("a request containing correctly formatted JSON and a download URL that fails hashing for successful upload")
       val callbackConsumer = mock[CallbackConsumer]
       val controller = new ListenerController(connector, callbackConsumer, mock[ResponseConsumer])
 
@@ -87,7 +124,7 @@ class ListenerControllerSpec extends UnitSpec with Matchers with GivenWhenThen w
 
       And("the download URL, the file reference and the error should be sent to the callbackConsumer")
       val awaited = Await.result(response, 2.seconds)
-      val listenerRequest = ListenerRequest("my-reference", new URL("http://some.invalid.url"))
+      val listenerRequest = UploadedFile("my-reference", new URL("http://some.invalid.url"))
       Mockito.verify(callbackConsumer).logHashError(listenerRequest, "This is an expected hashing exception")
     }
 
