@@ -51,16 +51,26 @@ Response body:
 ```
 {
     "currentDate": "2018-03-19",
-    "responses": [
+    "successfulResponses": [
         {
-            "reference": "my-reference"",
+            "reference": "my-reference",
             "downloadUrl": "http://my.download.url",
             "hash": "e7e5955a9926ff43412fcb4ff4e65e68"
         },
     {
-            "reference": "my-reference-2"",
+            "reference": "my-reference-2",
             "downloadUrl": "http://my.download.url-2",
             "hash": "e7e5955a9926ff43412fcb4ff4e65e68"
+        }
+    ],
+    "quarantineResponses": [
+        {
+            "reference": "my-reference-4",
+            "details": "This file had a nasty virus"
+        },
+        {
+            "reference": "my-reference-4",
+            "details": "And so did this one"
         }
     ]
 }
