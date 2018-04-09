@@ -53,7 +53,7 @@ Response body:
     "currentDate": "2018-03-19",
     "successfulResponses": [
         {
-            "reference": "my-reference",
+            "reference": "my-reference-1",
             "downloadUrl": "http://my.download.url",
             "hash": "e7e5955a9926ff43412fcb4ff4e65e68"
         },
@@ -65,7 +65,7 @@ Response body:
     ],
     "quarantineResponses": [
         {
-            "reference": "my-reference-4",
+            "reference": "my-reference-3",
             "details": "This file had a nasty virus"
         },
         {
