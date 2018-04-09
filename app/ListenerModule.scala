@@ -16,5 +16,5 @@ class ListenerModule extends Module {
 }
 
 class InMemoryResponseConsumerProvider extends Provider[InMemoryResponseConsumer] {
-  override def get(): InMemoryResponseConsumer = new InMemoryResponseConsumer(Nil, DateTime.now())
+  override def get(): InMemoryResponseConsumer = new InMemoryResponseConsumer(Nil, Nil, DateTime.now())
 }
