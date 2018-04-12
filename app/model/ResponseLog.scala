@@ -1,11 +1,10 @@
 package model
 
 import org.joda.time.DateTime
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Format, JsValue, Json}
 
 case class ResponseLog(currentDate: DateTime,
-                       successfulResponses: List[ListenerResponseSuccessfulUpload],
-                       quarantineResponses: List[QuarantinedFile])
+                       responses: List[JsValue])
 
 object ResponseLog {
   import JsonHelpers.datetimeFormats

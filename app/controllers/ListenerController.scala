@@ -2,52 +2,24 @@ package controllers
 
 import javax.inject.Inject
 
-import connectors.FileHashRetriever
-import model.{ListenerResponseSuccessfulUpload, QuarantinedFile, UploadedFile}
 import org.joda.time.DateTime
-import play.api.libs.json.{JsSuccess, Json}
+import play.api.Logger
 import play.api.mvc.Results.EmptyContent
-import play.api.mvc.{Action, AnyContent, Controller, Result}
-import utils.{CallbackConsumer, ResponseConsumer}
+import play.api.mvc.{Action, AnyContent, Controller}
+import utils.ResponseConsumer
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
-class ListenerController @Inject()(connector: FileHashRetriever,
-                                   callbackConsumer: CallbackConsumer,
-                                   responseConsumer: ResponseConsumer
-                                  )(implicit ec: ExecutionContext) extends Controller {
+class ListenerController @Inject()(responseConsumer: ResponseConsumer)(implicit ec: ExecutionContext) extends Controller {
 
-  def listen(): Action[AnyContent] = Action.async { implicit request =>
+  def listen(): Action[AnyContent] = Action { implicit request =>
     request.body.asJson match {
       case Some(json) =>
-        json.validate[UploadedFile] orElse json.validate[QuarantinedFile] match {
-          case JsSuccess(uploadedFile: UploadedFile, _) => handleSuccessfulUploadCallback(uploadedFile)
-          case JsSuccess(quarantinedFile: QuarantinedFile, _) => handleQuarantineUploadCallback(quarantinedFile)
-          case _ =>
-            callbackConsumer.logInvalidJson(json)
-            Future.successful(BadRequest(EmptyContent()))
-        }
+        responseConsumer.addResponse(json, DateTime.now())
+        Ok(json)
       case None =>
-        callbackConsumer.logInvalidBody(request.body.asText.getOrElse("Could not retrieve request body"))
-        Future.successful(BadRequest(EmptyContent()))
+        Logger.error(s"Request body cannot be parsed as JSON, request body is: ${request.body.toString}")
+        BadRequest(EmptyContent())
     }
-  }
-
-  private def handleSuccessfulUploadCallback(uploadedFile: UploadedFile): Future[Result] = {
-    connector.fileHash(uploadedFile.downloadUrl) map { md5 =>
-      val response = ListenerResponseSuccessfulUpload(uploadedFile.reference, uploadedFile.downloadUrl, md5)
-      callbackConsumer.logSuccessfulResponse(response)
-      responseConsumer.addResponse(response, DateTime.now())
-      Ok(Json.toJson(response))
-    } recover { case t: Throwable =>
-      callbackConsumer.logHashError(uploadedFile, t.getMessage)
-      InternalServerError(EmptyContent())
-    }
-  }
-
-  private def handleQuarantineUploadCallback(quarantinedFile: QuarantinedFile): Future[Result] = {
-    callbackConsumer.logQuarantinedResponse(quarantinedFile)
-    responseConsumer.addResponse(quarantinedFile, DateTime.now())
-    Future.successful(Ok(Json.toJson(quarantinedFile)))
   }
 }

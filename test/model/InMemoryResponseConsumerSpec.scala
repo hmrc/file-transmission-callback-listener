@@ -1,133 +1,65 @@
 package model
 
-import java.net.URL
-
 import org.joda.time.DateTime
-import org.scalatest.{GivenWhenThen, Matchers}
 import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{GivenWhenThen, Matchers}
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.play.test.UnitSpec
 import utils.InMemoryResponseConsumer
 
 class InMemoryResponseConsumerSpec extends UnitSpec with Matchers with GivenWhenThen with MockitoSugar {
+  private val initialResponses: List[JsValue] = List(
+    Json.parse("""{"reference": "my-first-reference", "url": "http://url.one", "fileStatus": "READY"}"""),
+    Json.parse("""{"reference": "my-second-reference",  "details": "This file had a virus", "fileStatus": "FAILED"}"""),
+    Json.parse("""{"reference": "my-third-reference", "url": "http://url.three", "fileStatus": "READY"}""")
+  )
+
+  private val initialDate = DateTime.parse("2018-03-16")
+
   "InMemoryResponseConsumer" should {
     "initialize with the date and populated list passed in" in {
       When("an InMemoryResponseConsumer is created with a date and a populated list")
-      val initialDate = DateTime.parse("2018-03-16")
-      val successfulUploads = List(
-        ListenerResponseSuccessfulUpload("my-first-reference", new URL("http://url.one"), "11111"),
-        ListenerResponseSuccessfulUpload("my-second-reference", new URL("http://url.two"), "22222")
-      )
 
-      val quarantinedUploads = List(
-        QuarantinedFile("my-third-reference", "This file has one nasty virus"),
-        QuarantinedFile("my-fourth-reference", "This file has two nasty viruses")
-      )
-
-      val consumer = new InMemoryResponseConsumer(successfulUploads, quarantinedUploads, initialDate)
+      val consumer = new InMemoryResponseConsumer(initialDate, initialResponses)
 
       Then("the expected response log should be returned")
-      consumer.retrieveResponses shouldBe ResponseLog(initialDate, successfulUploads, quarantinedUploads)
+      consumer.retrieveResponses shouldBe ResponseLog(initialDate, initialResponses)
     }
 
     "initialize with the date and empty list passed in" in {
       When("an InMemoryResponseConsumer is created with a date and a populated list")
       val initialDate = DateTime.parse("2018-03-16")
-      val consumer = new InMemoryResponseConsumer(Nil, Nil, initialDate)
+      val consumer = new InMemoryResponseConsumer(initialDate, Nil)
 
       Then("the expected response log should be returned")
-      consumer.retrieveResponses shouldBe ResponseLog(initialDate, Nil, Nil)
+      consumer.retrieveResponses shouldBe ResponseLog(initialDate, Nil)
     }
 
-    "append event to successful log if current date is same day as log day" in {
+    "append event to log if current date is same day as log day" in {
       Given("an InMemoryResponseConsumer with a date and a populated list")
-      val initialDate = DateTime.parse("2018-03-16")
-      val successfulUploads = List(
-        ListenerResponseSuccessfulUpload("my-first-reference", new URL("http://url.one"), "11111"),
-        ListenerResponseSuccessfulUpload("my-second-reference", new URL("http://url.two"), "22222")
-      )
-      val quarantinedUploads = List(
-        QuarantinedFile("my-third-reference", "This file has one nasty virus"),
-        QuarantinedFile("my-fourth-reference", "This file has two nasty viruses")
-      )
-      val consumer = new InMemoryResponseConsumer(successfulUploads, quarantinedUploads, initialDate)
+      val consumer = new InMemoryResponseConsumer(initialDate, initialResponses)
 
       When("a successful event event with the same date as the log is added")
-      val newResponse = ListenerResponseSuccessfulUpload("my-this-reference", new URL("http://url.three"), "33333")
+      val newResponse = Json.parse("""{"reference": "my-fourth-reference", "url": "http://url.four", "fileStatus": "READY"}""")
       consumer.addResponse(newResponse, initialDate)
 
       Then("the expected response log should be returned")
-      val updatedResponse = successfulUploads :+ newResponse
-      consumer.retrieveResponses shouldBe ResponseLog(initialDate, updatedResponse, quarantinedUploads)
+      val updatedResponses = initialResponses :+ newResponse
+      consumer.retrieveResponses shouldBe ResponseLog(initialDate, updatedResponses)
     }
 
-    "append event to quarantine log if current date is same day as log day" in {
+
+    "reset whole queue if event current date is greater than log day" in {
       Given("an InMemoryResponseConsumer with a date and a populated list")
-      val initialDate = DateTime.parse("2018-03-16")
-      val successfulUploads = List(
-        ListenerResponseSuccessfulUpload("my-first-reference", new URL("http://url.one"), "11111"),
-        ListenerResponseSuccessfulUpload("my-second-reference", new URL("http://url.two"), "22222")
-      )
-      val quarantinedUploads = List(
-        QuarantinedFile("my-third-reference", "This file has one nasty virus"),
-        QuarantinedFile("my-fourth-reference", "This file has two nasty viruses")
-      )
-      val consumer = new InMemoryResponseConsumer(successfulUploads, quarantinedUploads, initialDate)
-
-      When("a successful event event with the same date as the log is added")
-      val newResponse = QuarantinedFile("my-fifth-reference", "This file has three nasty viruses")
-      consumer.addResponse(newResponse, initialDate)
-
-      Then("the expected response log should be returned")
-      val updatedResponse = quarantinedUploads :+ newResponse
-      consumer.retrieveResponses shouldBe ResponseLog(initialDate, successfulUploads, updatedResponse)
-    }
-
-    "reset whole queue if successful current date is greater than log day" in {
-      Given("an InMemoryResponseConsumer with a date and a populated list")
-      val initialDate = DateTime.parse("2018-03-16")
-      val successfulUploads = List(
-        ListenerResponseSuccessfulUpload("my-first-reference", new URL("http://url.one"), "11111"),
-        ListenerResponseSuccessfulUpload("my-second-reference", new URL("http://url.two"), "22222")
-      )
-
-      val quarantinedUploads = List(
-        QuarantinedFile("my-third-reference", "This file has one nasty virus"),
-        QuarantinedFile("my-fourth-reference", "This file has two nasty viruses")
-      )
-
-      val consumer = new InMemoryResponseConsumer(successfulUploads, quarantinedUploads, initialDate)
+      val consumer = new InMemoryResponseConsumer(initialDate, initialResponses)
 
       When("a successful event with the next date as the log is added")
-      val newResponse = ListenerResponseSuccessfulUpload("my-this-reference", new URL("http://url.three"), "33333")
+      val newResponse = Json.parse("""{"reference": "my-fourth-reference", "url": "http://url.four", "fileStatus": "READY"}""")
       val newDate = DateTime.parse("2018-03-17")
       consumer.addResponse(newResponse, newDate)
 
       Then("the expected response log should be returned")
-      consumer.retrieveResponses shouldBe ResponseLog(newDate, List(newResponse), Nil)
-    }
-
-    "reset whole queue if successful quarantine date is greater than log day" in {
-      Given("an InMemoryResponseConsumer with a date and a populated list")
-      val initialDate = DateTime.parse("2018-03-16")
-      val successfulUploads = List(
-        ListenerResponseSuccessfulUpload("my-first-reference", new URL("http://url.one"), "11111"),
-        ListenerResponseSuccessfulUpload("my-second-reference", new URL("http://url.two"), "22222")
-      )
-
-      val quarantinedUploads = List(
-        QuarantinedFile("my-third-reference", "This file has one nasty virus"),
-        QuarantinedFile("my-fourth-reference", "This file has two nasty viruses")
-      )
-
-      val consumer = new InMemoryResponseConsumer(successfulUploads, quarantinedUploads, initialDate)
-
-      When("a quarantine event with the next date as the log is added")
-      val newResponse = QuarantinedFile("my-fifth-reference", "This file has three nasty viruses")
-      val newDate = DateTime.parse("2018-03-17")
-      consumer.addResponse(newResponse, newDate)
-
-      Then("the expected response log should be returned")
-      consumer.retrieveResponses shouldBe ResponseLog(newDate, Nil, List(newResponse))
+      consumer.retrieveResponses shouldBe ResponseLog(newDate, List(newResponse))
     }
   }
 }
