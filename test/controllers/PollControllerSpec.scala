@@ -1,14 +1,12 @@
 package controllers
 
-import java.net.URL
-
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import model.{ListenerResponseSuccessfulUpload, QuarantinedFile, ResponseLog}
+import model.ResponseLog
 import org.joda.time.DateTime
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{GivenWhenThen, Matchers}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Result
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.play.test.UnitSpec
@@ -28,20 +26,16 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
 
       Given("a controller and entries in the local log")
       val responseConsumer = new ResponseConsumer {
-        override def addResponse(response: ListenerResponseSuccessfulUpload, currentDate: DateTime): Unit = ()
-        override def addResponse(response: QuarantinedFile, currentDate: DateTime): Unit = ()
+        override def addResponse(response: JsValue, currentDate: DateTime): Unit = ???
+
         override def retrieveResponses: ResponseLog = ResponseLog(
           currentDate = DateTime.parse("2018-03-16"),
-          successfulResponses = List(
-            ListenerResponseSuccessfulUpload("my-first-reference", new URL("http://url.one"), "11111"),
-            ListenerResponseSuccessfulUpload("my-second-reference", new URL("http://url.two"), "22222")
-          ),
-          quarantineResponses = List(
-            QuarantinedFile("my-third-reference", "This file had a nasty virus")
+          responses = List(
+            Json.obj("reference" -> "my-first-reference", "url" -> "http://url.one", "fileStatus" -> "READY"),
+            Json.obj("reference" -> "my-second-reference", "details" -> "This file had a virus", "fileStatus" -> "FAILED"),
+            Json.obj("reference" -> "my-third-reference", "url" -> "http://url.three", "fileStatus" -> "READY")
           )
         )
-
-
       }
 
       val controller = new PollController(responseConsumer)
@@ -57,18 +51,18 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
         """
           |{
           |	"currentDate": "2018-03-16",
-          |	"successfulResponses": [{
+          |	"responses": [{
           |		"reference": "my-first-reference",
-          |		"downloadUrl": "http://url.one",
-          |		"hash": "11111"
+          |		"url": "http://url.one",
+          |		"fileStatus": "READY"
           |	}, {
           |		"reference": "my-second-reference",
-          |		"downloadUrl": "http://url.two",
-          |		"hash": "22222"
-          |	}],
-          |	"quarantineResponses": [{
+          |		"details": "This file had a virus",
+          |		"fileStatus": "FAILED"
+          |	}, {
           |		"reference": "my-third-reference",
-          |		"details": "This file had a nasty virus"
+          |		"url": "http://url.three",
+          |		"fileStatus": "READY"
           |	}]
           |}
         """.stripMargin)
@@ -78,9 +72,9 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
 
       Given("a controller and NO entries in the local log")
       val responseConsumer = new ResponseConsumer {
-        override def addResponse(response: ListenerResponseSuccessfulUpload, currentDate: DateTime): Unit = ()
-        override def addResponse(response: QuarantinedFile, currentDate: DateTime): Unit = ()
-        override def retrieveResponses: ResponseLog = ResponseLog(DateTime.parse("2018-03-16"), Nil, Nil)
+        override def addResponse(response: JsValue, currentDate: DateTime): Unit = ()
+
+        override def retrieveResponses: ResponseLog = ResponseLog(DateTime.parse("2018-03-16"), Nil)
       }
 
       val controller = new PollController(responseConsumer)
@@ -96,8 +90,7 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
         """
           |{
           |	"currentDate": "2018-03-16",
-          |	"successfulResponses":[],
-          | "quarantineResponses":[]
+          |	"responses":[]
           |}
         """.stripMargin)
     }
