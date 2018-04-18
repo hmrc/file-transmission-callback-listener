@@ -1,6 +1,6 @@
 import javax.inject.Provider
 
-import org.joda.time.DateTime
+import java.time.LocalDate
 import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
 import utils.{InMemoryResponseConsumer, ResponseConsumer}
@@ -12,5 +12,5 @@ class ListenerModule extends Module {
 }
 
 class InMemoryResponseConsumerProvider extends Provider[InMemoryResponseConsumer] {
-  override def get(): InMemoryResponseConsumer = new InMemoryResponseConsumer(DateTime.now(), Nil)
+  override def get(): InMemoryResponseConsumer = new InMemoryResponseConsumer(LocalDate.now(), Nil)
 }

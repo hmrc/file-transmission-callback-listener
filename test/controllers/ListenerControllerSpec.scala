@@ -2,7 +2,7 @@ package controllers
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import org.joda.time.DateTime
+import java.time.LocalDate
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
 import org.scalatest.mockito.MockitoSugar
@@ -47,7 +47,7 @@ class ListenerControllerSpec extends UnitSpec with Matchers with GivenWhenThen w
       Helpers.contentAsJson(response) shouldBe jsonCallback
 
       And("the successful response should be added to the response consumer log")
-      Mockito.verify(responseConsumer).addResponse(any(): JsValue, any(): DateTime)
+      Mockito.verify(responseConsumer).addResponse(any(): JsValue, any(): LocalDate)
     }
 
     "return OK and write to logs for POST for quarantined upload" in {
@@ -74,7 +74,7 @@ class ListenerControllerSpec extends UnitSpec with Matchers with GivenWhenThen w
 
 
       And("the successful response should be added to the response consumer log")
-      Mockito.verify(responseConsumer).addResponse(any(): JsValue, any(): DateTime)
+      Mockito.verify(responseConsumer).addResponse(any(): JsValue, any(): LocalDate)
     }
 
     "return BadRequest for a file that contains invalid body" in {
