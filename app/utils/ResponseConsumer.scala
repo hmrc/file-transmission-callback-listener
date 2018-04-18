@@ -3,24 +3,23 @@ package utils
 import javax.inject.Singleton
 
 import model.ResponseLog
-import org.joda.time.DateTime
+import java.time.LocalDate
 import play.api.libs.json.JsValue
 
 trait ResponseConsumer {
-  def addResponse(response: JsValue, currentDate: DateTime): Unit
-
+  def addResponse(response: JsValue, currentDate: LocalDate): Unit
 
   def retrieveResponses: ResponseLog
 }
 
 @Singleton
-class InMemoryResponseConsumer(private val initialDate: DateTime,
-                               private val initialResponses: List[JsValue]) extends ResponseConsumer {
+class InMemoryResponseConsumer(initialDate: LocalDate,
+                               initialResponses: Seq[JsValue]) extends ResponseConsumer {
 
-  private var responsesDate: DateTime = initialDate
-  private var responses: List[JsValue] = initialResponses
+  private var responsesDate: LocalDate = initialDate
+  private var responses: Seq[JsValue] = initialResponses
 
-  override def addResponse(response: JsValue, currentDate: DateTime): Unit = {
+  override def addResponse(response: JsValue, currentDate: LocalDate): Unit = {
     synchronized {
       checkAndRefreshCache(currentDate)
       responses = responses :+ response
@@ -29,10 +28,10 @@ class InMemoryResponseConsumer(private val initialDate: DateTime,
 
   override def retrieveResponses: ResponseLog = ResponseLog(responsesDate, responses)
 
-  private def checkAndRefreshCache(currentDate: DateTime): Unit = {
-    if (currentDate.dayOfYear().get() > responsesDate.dayOfYear().get()) {
+  private def checkAndRefreshCache(currentDate: LocalDate): Unit = {
+    if (currentDate.isAfter(responsesDate)) {
       responsesDate = currentDate
-      responses = List.empty
+      responses = Seq.empty
     }
   }
 }

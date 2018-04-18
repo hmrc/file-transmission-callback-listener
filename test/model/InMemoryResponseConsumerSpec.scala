@@ -1,6 +1,6 @@
 package model
 
-import org.joda.time.DateTime
+import java.time.LocalDate
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{GivenWhenThen, Matchers}
 import play.api.libs.json.{JsValue, Json}
@@ -14,7 +14,7 @@ class InMemoryResponseConsumerSpec extends UnitSpec with Matchers with GivenWhen
     Json.parse("""{"reference": "my-third-reference", "url": "http://url.three", "fileStatus": "READY"}""")
   )
 
-  private val initialDate = DateTime.parse("2018-03-16")
+  private val initialDate = LocalDate.parse("2018-03-16")
 
   "InMemoryResponseConsumer" should {
     "initialize with the date and populated list passed in" in {
@@ -28,7 +28,7 @@ class InMemoryResponseConsumerSpec extends UnitSpec with Matchers with GivenWhen
 
     "initialize with the date and empty list passed in" in {
       When("an InMemoryResponseConsumer is created with a date and a populated list")
-      val initialDate = DateTime.parse("2018-03-16")
+      val initialDate = LocalDate.parse("2018-03-16")
       val consumer = new InMemoryResponseConsumer(initialDate, Nil)
 
       Then("the expected response log should be returned")
@@ -55,7 +55,7 @@ class InMemoryResponseConsumerSpec extends UnitSpec with Matchers with GivenWhen
 
       When("a successful event with the next date as the log is added")
       val newResponse = Json.parse("""{"reference": "my-fourth-reference", "url": "http://url.four", "fileStatus": "READY"}""")
-      val newDate = DateTime.parse("2018-03-17")
+      val newDate = LocalDate.parse("2018-03-17")
       consumer.addResponse(newResponse, newDate)
 
       Then("the expected response log should be returned")
