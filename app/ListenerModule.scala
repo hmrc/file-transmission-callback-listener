@@ -7,7 +7,7 @@ import utils.{InMemoryResponseConsumer, ResponseConsumer}
 
 class ListenerModule extends Module {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = Seq(
-    bind[ResponseConsumer].toProvider[InMemoryResponseConsumerProvider].eagerly()
+    bind[ResponseConsumer].toProvider[InMemoryResponseConsumerProvider]
   )
 }
 
