@@ -3,7 +3,7 @@ package controllers
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import model.ResponseLog
-import org.joda.time.DateTime
+import java.time.LocalDate
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{GivenWhenThen, Matchers}
 import play.api.libs.json.{JsValue, Json}
@@ -26,10 +26,10 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
 
       Given("a controller and entries in the local log")
       val responseConsumer = new ResponseConsumer {
-        override def addResponse(response: JsValue, currentDate: DateTime): Unit = ???
+        override def addResponse(response: JsValue, currentDate: LocalDate): Unit = ???
 
         override def retrieveResponses: ResponseLog = ResponseLog(
-          currentDate = DateTime.parse("2018-03-16"),
+          currentDate = LocalDate.parse("2018-03-16"),
           responses = List(
             Json.obj("reference" -> "my-first-reference", "url" -> "http://url.one", "fileStatus" -> "READY"),
             Json.obj("reference" -> "my-second-reference", "details" -> "This file had a virus", "fileStatus" -> "FAILED"),
@@ -72,9 +72,9 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
 
       Given("a controller and NO entries in the local log")
       val responseConsumer = new ResponseConsumer {
-        override def addResponse(response: JsValue, currentDate: DateTime): Unit = ()
+        override def addResponse(response: JsValue, currentDate: LocalDate): Unit = ()
 
-        override def retrieveResponses: ResponseLog = ResponseLog(DateTime.parse("2018-03-16"), Nil)
+        override def retrieveResponses: ResponseLog = ResponseLog(LocalDate.parse("2018-03-16"), Nil)
       }
 
       val controller = new PollController(responseConsumer)
