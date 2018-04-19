@@ -1,7 +1,6 @@
 package controllers
 
 import javax.inject.Inject
-
 import java.time.LocalDate
 import play.api.Logger
 import play.api.mvc.Results.EmptyContent
@@ -13,6 +12,8 @@ import scala.concurrent.ExecutionContext
 class ListenerController @Inject()(responseConsumer: ResponseConsumer)(implicit ec: ExecutionContext) extends Controller {
 
   def listen(): Action[AnyContent] = Action { implicit request =>
+    Logger.debug(s"Received request with body: [${request.body.toString}].")
+
     request.body.asJson match {
       case Some(json) =>
         responseConsumer.addResponse(json, LocalDate.now())
