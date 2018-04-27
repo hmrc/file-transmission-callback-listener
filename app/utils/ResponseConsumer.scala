@@ -1,6 +1,5 @@
 package utils
 
-import javax.inject.Singleton
 import model.ResponseLog
 import java.time.LocalDate
 
@@ -13,7 +12,6 @@ trait ResponseConsumer {
   def retrieveResponses: ResponseLog
 }
 
-@Singleton
 class InMemoryResponseConsumer(private var responsesDate: LocalDate,
                                private var responses: Seq[JsValue]) extends ResponseConsumer {
 

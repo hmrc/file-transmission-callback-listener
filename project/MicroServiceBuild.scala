@@ -45,5 +45,12 @@ private object AppDependencies {
       }.test
   }
 
-  def apply() = compile ++ Test()
+  object IntegrationTest {
+    def apply() =
+      new TestDependencies {
+        override lazy val test = commonTestDependencies("it")
+      }.test
+  }
+
+  def apply() = compile ++ Test() ++ IntegrationTest()
 }
