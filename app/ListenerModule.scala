@@ -8,5 +8,5 @@ class ListenerModule extends AbstractModule {
   override def configure(): Unit = {}
 
   @Provides @Singleton
-  def responseConsumer(): ResponseConsumer = new InMemoryResponseConsumer(LocalDate.now, Nil)
+  def responseConsumer(): ResponseConsumer = new InMemoryResponseConsumer(LocalDate.now)
 }
