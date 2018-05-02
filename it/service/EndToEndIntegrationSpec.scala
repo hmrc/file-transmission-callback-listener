@@ -9,9 +9,7 @@ import play.api.test.{FakeHeaders, FakeRequest, Helpers}
 import play.api.test.Helpers._
 import uk.gov.hmrc.play.test.UnitSpec
 
-class EndToEndIntegrationSpec extends UnitSpec
-                              with GuiceOneAppPerSuite
-                              with GivenWhenThen {
+class EndToEndIntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with GivenWhenThen {
 
   "End To End Integration" should {
     "post 3 times to ListenerController and poll PollController for response" in {
@@ -20,7 +18,7 @@ class EndToEndIntegrationSpec extends UnitSpec
         val listenRequest = FakeRequest(Helpers.POST, "/upscan-listener/listen", FakeHeaders(), postBodyJson(i))
 
         val listenResponseF = route(app, listenRequest).get
-        status(listenResponseF) shouldBe 200
+        status(listenResponseF)        shouldBe 200
         contentAsJson(listenResponseF) shouldBe postBodyJson(i)
       }
 
@@ -34,9 +32,9 @@ class EndToEndIntegrationSpec extends UnitSpec
       contentAsJson(pollResponseF) shouldBe Json.obj(
         "currentDate" -> LocalDate.now.toString,
         "responses" -> Json.arr(
-          postBodyJson(1),
+          postBodyJson(3),
           postBodyJson(2),
-          postBodyJson(3)
+          postBodyJson(1)
         )
       )
     }
@@ -44,7 +42,7 @@ class EndToEndIntegrationSpec extends UnitSpec
 
   private def postBodyJson(i: Int): JsObject =
     Json.obj(
-      "reference" -> s"my-reference-$i",
+      "reference"   -> s"my-reference-$i",
       "downloadUrl" -> s"http://my$i.download.url"
     )
 }
