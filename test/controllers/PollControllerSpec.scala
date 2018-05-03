@@ -17,11 +17,12 @@ import scala.concurrent.duration._
 
 class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with MockitoSugar {
 
-  implicit val actorSystem = ActorSystem()
-  implicit val materializer = ActorMaterializer()
+  implicit val actorSystem                = ActorSystem()
+  implicit val materializer               = ActorMaterializer()
   implicit val timeout: akka.util.Timeout = 10.seconds
 
   "PollController" should {
+
     "return successful responses entries from local log" in {
 
       Given("a controller and entries in the local log")
@@ -32,10 +33,15 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
           currentDate = LocalDate.parse("2018-03-16"),
           responses = List(
             Json.obj("reference" -> "my-first-reference", "url" -> "http://url.one", "fileStatus" -> "READY"),
-            Json.obj("reference" -> "my-second-reference", "details" -> "This file had a virus", "fileStatus" -> "FAILED"),
+            Json.obj(
+              "reference"        -> "my-second-reference",
+              "details"          -> "This file had a virus",
+              "fileStatus"       -> "FAILED"),
             Json.obj("reference" -> "my-third-reference", "url" -> "http://url.three", "fileStatus" -> "READY")
           )
         )
+
+        override def lookupResponseForReference(reference: String): Option[JsValue] = ???
       }
 
       val controller = new PollController(responseConsumer)
@@ -47,8 +53,7 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
       status(result) shouldBe 200
 
       And("the list of events and date in the event store should be returned as JSON")
-      Helpers.contentAsJson(result) shouldBe Json.parse(
-        """
+      Helpers.contentAsJson(result) shouldBe Json.parse("""
           |{
           |	"currentDate": "2018-03-16",
           |	"responses": [{
@@ -75,6 +80,8 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
         override def addResponse(response: JsValue, currentDate: LocalDate): Unit = ()
 
         override def retrieveResponses: ResponseLog = ResponseLog(LocalDate.parse("2018-03-16"), Nil)
+
+        override def lookupResponseForReference(reference: String): Option[JsValue] = ???
       }
 
       val controller = new PollController(responseConsumer)
@@ -86,13 +93,62 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
       status(result) shouldBe 200
 
       And("an empty list and date in the event store should be returned as JSON")
-      Helpers.contentAsJson(result) shouldBe Json.parse(
-        """
+      Helpers.contentAsJson(result) shouldBe Json.parse("""
           |{
           |	"currentDate": "2018-03-16",
           |	"responses":[]
           |}
         """.stripMargin)
+    }
+
+    "lookup for existing response in local log" in {
+
+      Given("a controller and entries in the local log")
+      val responseConsumer = new ResponseConsumer {
+        override def addResponse(response: JsValue, currentDate: LocalDate): Unit = ???
+
+        override def retrieveResponses: ResponseLog = ???
+        override def lookupResponseForReference(reference: String): Option[JsValue] =
+          Some(Json.obj("reference" -> reference, "url" -> "http://url.one", "fileStatus" -> "READY"))
+      }
+
+      val controller = new PollController(responseConsumer)
+
+      When("the lookup method is called")
+      val result: Future[Result] = controller.lookup("my-first-reference")(FakeRequest())
+
+      Then("the service should return OK")
+      status(result) shouldBe 200
+
+      And("the event should be returned as JSON")
+      Helpers.contentAsJson(result) shouldBe Json.parse("""
+                                                          |{
+                                                          |		"reference": "my-first-reference",
+                                                          |		"url": "http://url.one",
+                                                          |		"fileStatus": "READY"
+                                                          |}
+                                                        """.stripMargin)
+
+    }
+
+    "return not found if response not found in local log" in {
+
+      Given("a controller and entries in the local log")
+      val responseConsumer = new ResponseConsumer {
+        override def addResponse(response: JsValue, currentDate: LocalDate): Unit = ???
+
+        override def retrieveResponses: ResponseLog                                 = ???
+        override def lookupResponseForReference(reference: String): Option[JsValue] = None
+      }
+
+      val controller = new PollController(responseConsumer)
+
+      When("the lookup method is called")
+      val result: Future[Result] = controller.lookup("my-first-reference")(FakeRequest())
+
+      Then("the service should return OK")
+      status(result) shouldBe 404
+
     }
   }
 }

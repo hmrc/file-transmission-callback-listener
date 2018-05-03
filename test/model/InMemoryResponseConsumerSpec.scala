@@ -26,7 +26,7 @@ class InMemoryResponseConsumerSpec extends UnitSpec with Matchers with GivenWhen
       initialResponses.foreach(response => consumer.addResponse(response, initialDate))
 
       Then("the expected response log should be returned")
-      consumer.retrieveResponses shouldBe ResponseLog(initialDate, initialResponses.reverse)
+      consumer.retrieveResponses() shouldBe ResponseLog(initialDate, initialResponses.reverse)
     }
 
     "initialize with the date and empty list passed in" in {
@@ -35,7 +35,7 @@ class InMemoryResponseConsumerSpec extends UnitSpec with Matchers with GivenWhen
       val consumer    = new InMemoryResponseConsumer(initialDate)
 
       Then("the expected response log should be returned")
-      consumer.retrieveResponses shouldBe ResponseLog(initialDate, Nil)
+      consumer.retrieveResponses() shouldBe ResponseLog(initialDate, Nil)
     }
 
     "append event to log if current date is same day as log day" in {
@@ -55,6 +55,24 @@ class InMemoryResponseConsumerSpec extends UnitSpec with Matchers with GivenWhen
       consumer.retrieveResponses shouldBe ResponseLog(initialDate, updatedResponses.reverse)
     }
 
+    "allow to lookup for added events by reference" in {
+      Given("an InMemoryResponseConsumer with a date")
+      val consumer = new InMemoryResponseConsumer(initialDate)
+
+      And("there are some initial responses")
+      initialResponses.foreach(response => consumer.addResponse(response, initialDate))
+
+      When("a successful event with the next date as the log is added")
+      val newResponse =
+        Json.parse("""{"reference": "my-fourth-reference", "url": "http://url.four", "fileStatus": "READY"}""")
+      val newDate = LocalDate.parse("2018-03-17")
+      consumer.addResponse(newResponse, newDate)
+
+      Then("the expected response log should be returned")
+      consumer.lookupResponseForReference("my-fourth-reference")    shouldBe Some(newResponse)
+      consumer.lookupResponseForReference("non-existent-reference") shouldBe None
+    }
+
     "reset whole queue if event current date is greater than log day" in {
       Given("an InMemoryResponseConsumer with a date")
       val consumer = new InMemoryResponseConsumer(initialDate)
@@ -69,7 +87,7 @@ class InMemoryResponseConsumerSpec extends UnitSpec with Matchers with GivenWhen
       consumer.addResponse(newResponse, newDate)
 
       Then("the expected response log should be returned")
-      consumer.retrieveResponses shouldBe ResponseLog(newDate, List(newResponse))
+      consumer.retrieveResponses() shouldBe ResponseLog(newDate, List(newResponse))
     }
   }
 }
