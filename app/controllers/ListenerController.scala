@@ -9,7 +9,8 @@ import utils.ResponseConsumer
 
 import scala.concurrent.ExecutionContext
 
-class ListenerController @Inject()(responseConsumer: ResponseConsumer)(implicit ec: ExecutionContext) extends Controller {
+class ListenerController @Inject()(responseConsumer: ResponseConsumer)(implicit ec: ExecutionContext)
+    extends Controller {
 
   def listen(): Action[AnyContent] = Action { implicit request =>
     Logger.debug(s"Received request with body: [${request.body.toString}].")
@@ -23,4 +24,5 @@ class ListenerController @Inject()(responseConsumer: ResponseConsumer)(implicit 
         BadRequest(EmptyContent())
     }
   }
+
 }

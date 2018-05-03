@@ -2,3 +2,4 @@
 
 POST        /listen             @controllers.ListenerController.listen
 GET         /poll               @controllers.PollController.poll
+GET         /poll/:reference  @controllers.PollController.lookup(reference : String)
