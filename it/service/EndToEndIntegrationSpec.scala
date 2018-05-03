@@ -38,6 +38,45 @@ class EndToEndIntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with Giv
         )
       )
     }
+
+    "it's possible to lookup for created events" in {
+      Given("the service receives 3 POSTs to /listen")
+      for (i <- 1 to 3) {
+        val listenRequest = FakeRequest(Helpers.POST, "/upscan-listener/listen", FakeHeaders(), postBodyJson(i))
+
+        val listenResponseF = route(app, listenRequest).get
+        status(listenResponseF)        shouldBe 200
+        contentAsJson(listenResponseF) shouldBe postBodyJson(i)
+      }
+
+      When("looking up for details of specific event")
+      val pollRequest = FakeRequest(Helpers.GET, "/upscan-listener/poll/my-reference-1")
+
+      Then("we should get details of this event")
+      val pollResponseF = route(app, pollRequest).get
+      status(pollResponseF) shouldBe 200
+
+      contentAsJson(pollResponseF) shouldBe postBodyJson(1)
+    }
+
+    "looking up for non existing events should end with HTTP 404 error" in {
+      Given("the service receives 3 POSTs to /listen")
+      for (i <- 1 to 3) {
+        val listenRequest = FakeRequest(Helpers.POST, "/upscan-listener/listen", FakeHeaders(), postBodyJson(i))
+
+        val listenResponseF = route(app, listenRequest).get
+        status(listenResponseF)        shouldBe 200
+        contentAsJson(listenResponseF) shouldBe postBodyJson(i)
+      }
+
+      When("looking up for details of non-existent event")
+      val pollRequest = FakeRequest(Helpers.GET, "/upscan-listener/poll/non-existent")
+
+      Then("we should get HTTP 404 error")
+      val pollResponseF = route(app, pollRequest).get
+      status(pollResponseF) shouldBe 404
+    }
+
   }
 
   private def postBodyJson(i: Int): JsObject =
