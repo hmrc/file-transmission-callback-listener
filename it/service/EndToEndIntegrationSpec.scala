@@ -32,9 +32,9 @@ class EndToEndIntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with Giv
       contentAsJson(pollResponseF) shouldBe Json.obj(
         "currentDate" -> LocalDate.now.toString,
         "responses" -> Json.arr(
-          postBodyJson(3),
+          postBodyJson(1),
           postBodyJson(2),
-          postBodyJson(1)
+          postBodyJson(3)
         )
       )
     }
