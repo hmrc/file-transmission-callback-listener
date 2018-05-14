@@ -26,7 +26,7 @@ class InMemoryResponseConsumerSpec extends UnitSpec with Matchers with GivenWhen
       initialResponses.foreach(response => consumer.addResponse(response, initialDate))
 
       Then("the expected response log should be returned")
-      consumer.retrieveResponses() shouldBe ResponseLog(initialDate, initialResponses.reverse)
+      consumer.retrieveResponses() shouldBe ResponseLog(initialDate, initialResponses)
     }
 
     "initialize with the date and empty list passed in" in {
@@ -52,7 +52,7 @@ class InMemoryResponseConsumerSpec extends UnitSpec with Matchers with GivenWhen
 
       Then("the expected response log should be returned")
       val updatedResponses = initialResponses :+ newResponse
-      consumer.retrieveResponses shouldBe ResponseLog(initialDate, updatedResponses.reverse)
+      consumer.retrieveResponses shouldBe ResponseLog(initialDate, updatedResponses)
     }
 
     "allow to lookup for added events by reference" in {
@@ -71,6 +71,27 @@ class InMemoryResponseConsumerSpec extends UnitSpec with Matchers with GivenWhen
       Then("the expected response log should be returned")
       consumer.lookupResponseForReference("my-fourth-reference")    shouldBe Some(newResponse)
       consumer.lookupResponseForReference("non-existent-reference") shouldBe None
+    }
+
+    "purge the oldest messages if reached queue size limit" in {
+      Given("an InMemoryResponseConsumer with a date and a populated list")
+      val consumer = new InMemoryResponseConsumer(initialDate, maximumQueueLength = 3)
+
+      And("there are some initial responses - up to the limit")
+      initialResponses.foreach(response => consumer.addResponse(response, initialDate))
+
+      When("the new response is added")
+      val newResponse =
+        Json.parse("""{"reference": "my-fourth-reference", "url": "http://url.four", "fileStatus": "READY"}""")
+      consumer.addResponse(newResponse, initialDate)
+
+      Then("response list should contain the most recently added response")
+      consumer.retrieveResponses().responses                               should contain(newResponse)
+      consumer.lookupResponseForReference("my-fourth-reference").isDefined shouldBe true
+
+      And("response list shouldn't contain the erliest added response")
+      consumer.retrieveResponses().responses shouldNot contain(initialResponses.head)
+      consumer.lookupResponseForReference("my-first-reference").isDefined shouldBe false
     }
 
     "reset whole queue if event current date is greater than log day" in {
