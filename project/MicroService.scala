@@ -1,3 +1,4 @@
+import play.sbt.PlayImport.PlayKeys
 import sbt.Keys._
 import sbt.Tests.{SubProcess, Group}
 import sbt._
@@ -23,6 +24,7 @@ trait MicroService {
 
   lazy val microservice = Project(appName, file("."))
     .enablePlugins(plugins : _*)
+    .settings(PlayKeys.playDefaultPort := 9574)
     .settings(playSettings : _*)
     .settings(version := appVersion)
     .settings(scalaSettings: _*)
