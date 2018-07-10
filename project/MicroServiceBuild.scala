@@ -3,7 +3,7 @@ import sbt._
 object MicroServiceBuild extends Build with MicroService {
   import scala.util.Properties.envOrElse
 
-  val appName = "upscan-listener"
+  val appName    = "upscan-listener"
   val appVersion = envOrElse("UPSCAN_LISTENER_VERSION", "999-SNAPSHOT")
 
   override lazy val appDependencies: Seq[ModuleID] = AppDependencies()
@@ -13,10 +13,9 @@ private object AppDependencies {
   import play.sbt.PlayImport._
   import play.core.PlayVersion
 
-
   val compile = Seq(
     ws,
-    "uk.gov.hmrc" %% "bootstrap-play-25" % "1.5.0"
+    "uk.gov.hmrc" %% "bootstrap-play-25" % "1.7.0"
   )
 
   trait TestDependencies {
