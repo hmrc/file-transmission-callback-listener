@@ -15,7 +15,7 @@ class EndToEndIntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with Giv
     "post 3 times to ListenerController and poll PollController for response" in {
       Given("the service receives 3 POSTs to /listen")
       for (i <- 1 to 3) {
-        val listenRequest = FakeRequest(Helpers.POST, "/upscan-listener/listen", FakeHeaders(), postBodyJson(i))
+        val listenRequest = FakeRequest(Helpers.POST, "/file-transmission-callback-listener/listen", FakeHeaders(), postBodyJson(i))
 
         val listenResponseF = route(app, listenRequest).get
         status(listenResponseF)        shouldBe 200
@@ -23,7 +23,7 @@ class EndToEndIntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with Giv
       }
 
       When("the service is polled on /poll")
-      val pollRequest = FakeRequest(Helpers.GET, "/upscan-listener/poll")
+      val pollRequest = FakeRequest(Helpers.GET, "/file-transmission-callback-listener/poll")
 
       val pollResponseF = route(app, pollRequest).get
       status(pollResponseF) shouldBe 200
@@ -42,7 +42,7 @@ class EndToEndIntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with Giv
     "it's possible to lookup for created events" in {
       Given("the service receives 3 POSTs to /listen")
       for (i <- 1 to 3) {
-        val listenRequest = FakeRequest(Helpers.POST, "/upscan-listener/listen", FakeHeaders(), postBodyJson(i))
+        val listenRequest = FakeRequest(Helpers.POST, "/file-transmission-callback-listener/listen", FakeHeaders(), postBodyJson(i))
 
         val listenResponseF = route(app, listenRequest).get
         status(listenResponseF)        shouldBe 200
@@ -50,7 +50,7 @@ class EndToEndIntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with Giv
       }
 
       When("looking up for details of specific event")
-      val pollRequest = FakeRequest(Helpers.GET, "/upscan-listener/poll/my-reference-1")
+      val pollRequest = FakeRequest(Helpers.GET, "/file-transmission-callback-listener/poll/my-reference-1")
 
       Then("we should get details of this event")
       val pollResponseF = route(app, pollRequest).get
@@ -62,7 +62,7 @@ class EndToEndIntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with Giv
     "looking up for non existing events should end with HTTP 404 error" in {
       Given("the service receives 3 POSTs to /listen")
       for (i <- 1 to 3) {
-        val listenRequest = FakeRequest(Helpers.POST, "/upscan-listener/listen", FakeHeaders(), postBodyJson(i))
+        val listenRequest = FakeRequest(Helpers.POST, "/file-transmission-callback-listener/listen", FakeHeaders(), postBodyJson(i))
 
         val listenResponseF = route(app, listenRequest).get
         status(listenResponseF)        shouldBe 200
@@ -70,7 +70,7 @@ class EndToEndIntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with Giv
       }
 
       When("looking up for details of non-existent event")
-      val pollRequest = FakeRequest(Helpers.GET, "/upscan-listener/poll/non-existent")
+      val pollRequest = FakeRequest(Helpers.GET, "/file-transmission-callback-listener/poll/non-existent")
 
       Then("we should get HTTP 404 error")
       val pollResponseF = route(app, pollRequest).get

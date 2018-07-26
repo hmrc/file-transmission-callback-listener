@@ -1,9 +1,5 @@
 # microservice specific routes
 
-<<<<<<< HEAD
 POST        /listen             @controllers.ListenerController.listen
 GET         /poll               @controllers.PollController.poll
 GET         /poll/:reference  @controllers.PollController.lookup(reference : String)
-=======
-GET        /hello-world             uk.gov.hmrc.filetransmissioncallbacklistener.controllers.MicroserviceHelloWorld.hello
->>>>>>> origin/master
