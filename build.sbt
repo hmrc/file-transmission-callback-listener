@@ -1,8 +1,23 @@
 import TestPhases.oneForkedJvmPerTest
-import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption}
+import scoverage.ScoverageKeys
+import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, scalaSettings}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 
 val appName = "file-transmission-callback-listener"
+
+lazy val scoverageSettings = {
+  Seq(
+    // Semicolon-separated list of regexs matching classes to exclude
+    ScoverageKeys.coverageExcludedPackages := "<empty>;Reverse.*;.*AuthService.*;models/.data/..*;view.*",
+    ScoverageKeys.coverageExcludedFiles :=
+      ".*/frontendGlobal.*;.*/frontendAppConfig.*;.*/frontendWiring.*;.*/views/.*_template.*;.*/govuk_wrapper.*;.*/routes_routing.*;.*/BuildInfo.*",
+    // Minimum is deliberately low to avoid failures initially - please increase as we add more coverage
+    ScoverageKeys.coverageMinimum := 25,
+    ScoverageKeys.coverageFailOnMinimum := false,
+    ScoverageKeys.coverageHighlighting := true,
+    parallelExecution in Test := false
+  )
+}
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
@@ -10,6 +25,8 @@ lazy val microservice = Project(appName, file("."))
     libraryDependencies              ++= AppDependencies.compile ++ AppDependencies.test() ++ AppDependencies.test("it"),
     evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
   )
+  .settings(PlayKeys.playDefaultPort := 9577)
+  .settings(scalaSettings ++ scoverageSettings: _*)
   .settings(
     publishingSettings: _*
   )
