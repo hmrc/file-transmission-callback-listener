@@ -7,7 +7,7 @@ val appName = "file-transmission-callback-listener"
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
   .settings(
-    libraryDependencies              ++= AppDependencies.compile ++ AppDependencies.test(),
+    libraryDependencies              ++= AppDependencies.compile ++ AppDependencies.test() ++ AppDependencies.test("it"),
     evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
   )
   .settings(
