@@ -48,12 +48,13 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
         override def retrieveResponses: ResponseLog = ResponseLog(
           currentDate = LocalDate.parse("2018-03-16"),
           responses = List(
-            Json.obj("reference" -> "my-first-reference", "url" -> "http://url.one", "fileStatus" -> "READY"),
+            Json.obj("fileReference" -> "my-first-reference", "batchId" -> "B1", "outcome" -> "READY"),
             Json.obj(
-              "reference"        -> "my-second-reference",
-              "details"          -> "This file had a virus",
-              "fileStatus"       -> "FAILED"),
-            Json.obj("reference" -> "my-third-reference", "url" -> "http://url.three", "fileStatus" -> "READY")
+              "fileReference"        -> "my-second-reference",
+              "batchId"              -> "B2",
+              "errorDetails"         -> "Something went wrong",
+              "outcome"              -> "FAILED"),
+            Json.obj("fileReference" -> "my-third-reference", "batchId" -> "B3", "outcome" -> "READY")
           )
         )
 
@@ -73,17 +74,18 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
           |{
           |	"currentDate": "2018-03-16",
           |	"responses": [{
-          |		"reference": "my-first-reference",
-          |		"url": "http://url.one",
-          |		"fileStatus": "READY"
+          |		"fileReference": "my-first-reference",
+          |		"batchId": "B1",
+          |		"outcome": "READY"
           |	}, {
-          |		"reference": "my-second-reference",
-          |		"details": "This file had a virus",
-          |		"fileStatus": "FAILED"
+          |		"fileReference": "my-second-reference",
+          |   "batchId": "B2",
+          |		"errorDetails": "Something went wrong",
+          |		"outcome": "FAILED"
           |	}, {
-          |		"reference": "my-third-reference",
-          |		"url": "http://url.three",
-          |		"fileStatus": "READY"
+          |		"fileReference": "my-third-reference",
+          |   "batchId": "B3",
+          |		"outcome": "READY"
           |	}]
           |}
         """.stripMargin)
@@ -125,7 +127,7 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
 
         override def retrieveResponses: ResponseLog = ???
         override def lookupResponseForReference(reference: String): Option[JsValue] =
-          Some(Json.obj("reference" -> reference, "url" -> "http://url.one", "fileStatus" -> "READY"))
+          Some(Json.obj("fileReference" -> reference, "batchId" -> "B1", "outcome" -> "READY"))
       }
 
       val controller = new PollController(responseConsumer)
@@ -139,9 +141,9 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
       And("the event should be returned as JSON")
       Helpers.contentAsJson(result) shouldBe Json.parse("""
                                                           |{
-                                                          |		"reference": "my-first-reference",
-                                                          |		"url": "http://url.one",
-                                                          |		"fileStatus": "READY"
+                                                          |		"fileReference": "my-first-reference",
+                                                          |		"batchId": "B1",
+                                                          |		"outcome": "READY"
                                                           |}
                                                         """.stripMargin)
 

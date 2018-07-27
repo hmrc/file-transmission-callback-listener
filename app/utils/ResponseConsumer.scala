@@ -61,7 +61,7 @@ class InMemoryResponseConsumer(private var responsesDate: LocalDate, maximumQueu
 
   private def getReference(response: JsValue) =
     response match {
-      case JsObject(fields) => fields.get("reference").flatMap(_.asOpt[String])
+      case JsObject(fields) => fields.get("fileReference").flatMap(_.asOpt[String])
       case _                => None
     }
 

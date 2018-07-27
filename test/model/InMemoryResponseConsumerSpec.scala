@@ -25,9 +25,10 @@ import utils.InMemoryResponseConsumer
 
 class InMemoryResponseConsumerSpec extends UnitSpec with Matchers with GivenWhenThen with MockitoSugar {
   private val initialResponses: List[JsValue] = List(
-    Json.parse("""{"reference": "my-first-reference", "url": "http://url.one", "fileStatus": "READY"}"""),
-    Json.parse("""{"reference": "my-second-reference",  "details": "This file had a virus", "fileStatus": "FAILED"}"""),
-    Json.parse("""{"reference": "my-third-reference", "url": "http://url.three", "fileStatus": "READY"}""")
+    Json.parse("""{"fileReference": "my-first-reference", "batchId": "http://url.one", "outcome": "READY"}"""),
+    Json.parse(
+      """{"fileReference": "my-second-reference",  "details": "This file had a virus", "outcome": "FAILED"}"""),
+    Json.parse("""{"fileReference": "my-third-reference", "batchId": "http://url.three", "outcome": "READY"}""")
   )
 
   private val initialDate = LocalDate.parse("2018-03-16")
@@ -63,7 +64,7 @@ class InMemoryResponseConsumerSpec extends UnitSpec with Matchers with GivenWhen
 
       When("a successful event event with the same date as the log is added")
       val newResponse =
-        Json.parse("""{"reference": "my-fourth-reference", "url": "http://url.four", "fileStatus": "READY"}""")
+        Json.parse("""{"fileReference": "my-fourth-reference", "batchId": "http://url.four", "outcome": "READY"}""")
       consumer.addResponse(newResponse, initialDate)
 
       Then("the expected response log should be returned")
@@ -80,7 +81,7 @@ class InMemoryResponseConsumerSpec extends UnitSpec with Matchers with GivenWhen
 
       When("a successful event with the next date as the log is added")
       val newResponse =
-        Json.parse("""{"reference": "my-fourth-reference", "url": "http://url.four", "fileStatus": "READY"}""")
+        Json.parse("""{"fileReference": "my-fourth-reference", "batchId": "http://url.four", "outcome": "READY"}""")
       val newDate = LocalDate.parse("2018-03-17")
       consumer.addResponse(newResponse, newDate)
 
@@ -98,7 +99,7 @@ class InMemoryResponseConsumerSpec extends UnitSpec with Matchers with GivenWhen
 
       When("the new response is added")
       val newResponse =
-        Json.parse("""{"reference": "my-fourth-reference", "url": "http://url.four", "fileStatus": "READY"}""")
+        Json.parse("""{"fileReference": "my-fourth-reference", "batchId": "http://url.four", "outcome": "READY"}""")
       consumer.addResponse(newResponse, initialDate)
 
       Then("response list should contain the most recently added response")
@@ -119,7 +120,7 @@ class InMemoryResponseConsumerSpec extends UnitSpec with Matchers with GivenWhen
 
       When("a successful event with the next date as the log is added")
       val newResponse =
-        Json.parse("""{"reference": "my-fourth-reference", "url": "http://url.four", "fileStatus": "READY"}""")
+        Json.parse("""{"fileReference": "my-fourth-reference", "batchId": "http://url.four", "outcome": "READY"}""")
       val newDate = LocalDate.parse("2018-03-17")
       consumer.addResponse(newResponse, newDate)
 
