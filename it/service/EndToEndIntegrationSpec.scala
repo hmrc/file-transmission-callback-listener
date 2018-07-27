@@ -15,7 +15,8 @@ class EndToEndIntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with Giv
     "post 3 times to ListenerController and poll PollController for response" in {
       Given("the service receives 3 POSTs to /listen")
       for (i <- 1 to 3) {
-        val listenRequest = FakeRequest(Helpers.POST, "/file-transmission-callback-listener/listen", FakeHeaders(), postBodyJson(i))
+        val listenRequest =
+          FakeRequest(Helpers.POST, "/file-transmission-callback-listener/listen", FakeHeaders(), postBodyJson(i))
 
         val listenResponseF = route(app, listenRequest).get
         status(listenResponseF)        shouldBe 200
@@ -42,7 +43,8 @@ class EndToEndIntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with Giv
     "it's possible to lookup for created events" in {
       Given("the service receives 3 POSTs to /listen")
       for (i <- 1 to 3) {
-        val listenRequest = FakeRequest(Helpers.POST, "/file-transmission-callback-listener/listen", FakeHeaders(), postBodyJson(i))
+        val listenRequest =
+          FakeRequest(Helpers.POST, "/file-transmission-callback-listener/listen", FakeHeaders(), postBodyJson(i))
 
         val listenResponseF = route(app, listenRequest).get
         status(listenResponseF)        shouldBe 200
@@ -62,7 +64,8 @@ class EndToEndIntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with Giv
     "looking up for non existing events should end with HTTP 404 error" in {
       Given("the service receives 3 POSTs to /listen")
       for (i <- 1 to 3) {
-        val listenRequest = FakeRequest(Helpers.POST, "/file-transmission-callback-listener/listen", FakeHeaders(), postBodyJson(i))
+        val listenRequest =
+          FakeRequest(Helpers.POST, "/file-transmission-callback-listener/listen", FakeHeaders(), postBodyJson(i))
 
         val listenResponseF = route(app, listenRequest).get
         status(listenResponseF)        shouldBe 200
@@ -81,7 +84,7 @@ class EndToEndIntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with Giv
 
   private def postBodyJson(i: Int): JsObject =
     Json.obj(
-      "reference"   -> s"my-reference-$i",
-      "downloadUrl" -> s"http://my$i.download.url"
+      "fileReference" -> s"my-reference-$i",
+      "downloadUrl"   -> s"http://my$i.download.url"
     )
 }
