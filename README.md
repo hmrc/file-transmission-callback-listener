@@ -43,7 +43,7 @@ If the end-to-end process has worked as expected, you should see the following i
 The service has a GET endpoint, which can be used to query the successful callbacks that the service has made since 00:00 on the day queried. These calls are stored in local memory, meaning that when the app is restarted, the log will be lost. It will ONLY log successful calls, not any instances where there has been an error with the callback.
 
 GET request:
-URL: ```http://localhost:12345/file-transmission-callback-listener/poll```
+URL: ```http://localhost:12345/file-transmission-callback-listener/poll/{fileReference}```
 
 Response body:
 ```
