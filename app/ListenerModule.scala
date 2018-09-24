@@ -25,4 +25,5 @@ class ListenerModule extends AbstractModule {
 
   @Provides @Singleton
   def responseConsumer(): ResponseConsumer = new InMemoryResponseConsumer(LocalDate.now)
+
 }
