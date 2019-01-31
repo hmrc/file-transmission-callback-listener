@@ -29,4 +29,9 @@ class PollController @Inject()(events: ResponseConsumer) extends Controller {
   def lookup(reference: String) = Action { implicit request =>
     events.lookupResponseForReference(reference).map(Ok(_)).getOrElse(NotFound)
   }
+
+  def clear() = Action { implicit request =>
+    events.clear
+    SeeOther(controllers.routes.PollController.poll().url)
+  }
 }

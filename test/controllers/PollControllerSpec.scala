@@ -59,6 +59,7 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
         )
 
         override def lookupResponseForReference(reference: String): Option[JsValue] = ???
+        override def clear() = ???
       }
 
       val controller = new PollController(responseConsumer)
@@ -100,6 +101,7 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
         override def retrieveResponses: ResponseLog = ResponseLog(LocalDate.parse("2018-03-16"), Nil)
 
         override def lookupResponseForReference(reference: String): Option[JsValue] = ???
+        override def clear() = ???
       }
 
       val controller = new PollController(responseConsumer)
@@ -128,6 +130,7 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
         override def retrieveResponses: ResponseLog = ???
         override def lookupResponseForReference(reference: String): Option[JsValue] =
           Some(Json.obj("fileReference" -> reference, "batchId" -> "B1", "outcome" -> "READY"))
+        override def clear() = ???
       }
 
       val controller = new PollController(responseConsumer)
@@ -157,6 +160,7 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
 
         override def retrieveResponses: ResponseLog                                 = ???
         override def lookupResponseForReference(reference: String): Option[JsValue] = None
+        override def clear() = ???
       }
 
       val controller = new PollController(responseConsumer)
