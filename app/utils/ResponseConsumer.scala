@@ -32,6 +32,8 @@ trait ResponseConsumer {
   def retrieveResponses(): ResponseLog
 
   def lookupResponseForReference(reference: String): Option[JsValue]
+
+  def clear()
 }
 
 class InMemoryResponseConsumer(private var responsesDate: LocalDate, maximumQueueLength: Int = 10000)
@@ -45,9 +47,9 @@ class InMemoryResponseConsumer(private var responsesDate: LocalDate, maximumQueu
     withFileReferenceLogged(response) {
       checkAndRefreshCache(today)
       dropOldestOnes()
-      val refefence: Option[String] = getReference(response)
+      val reference: Option[String] = getReference(response)
 
-      refefence match {
+      reference match {
         case Some(existingReference) =>
           responseMap.put(existingReference, response)
           synchronized {
@@ -83,13 +85,17 @@ class InMemoryResponseConsumer(private var responsesDate: LocalDate, maximumQueu
   private def checkAndRefreshCache(today: LocalDate): Unit =
     if (today.isAfter(responsesDate)) {
       responsesDate = today
-      responseMap.clear()
-      synchronized {
-        responseQueue = Queue.empty[JsValue]
-      }
+      clear()
       Logger.info(s"Resetting responses for new day: [$today].")
     }
 
   override def lookupResponseForReference(reference: String): Option[JsValue] =
     responseMap.get(reference)
+
+  override def clear() = {
+    synchronized {
+      responseMap.clear()
+      responseQueue = Queue.empty
+    }
+  }
 }
