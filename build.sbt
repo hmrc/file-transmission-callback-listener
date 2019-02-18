@@ -28,7 +28,7 @@ lazy val microservice = Project(appName, file("."))
   )
   .settings(PlayKeys.playDefaultPort := 9577)
   .settings(scalaSettings ++ scoverageSettings: _*)
-  .settings(majorVersion := 1)
+  .settings(majorVersion := 2)
   .settings(
     publishingSettings: _*
   )
