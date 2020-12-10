@@ -17,13 +17,13 @@
 package model
 
 import java.time.LocalDate
+
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{GivenWhenThen, Matchers}
+import org.scalatest.{GivenWhenThen, Matchers, WordSpec}
 import play.api.libs.json.{JsValue, Json}
-import uk.gov.hmrc.play.test.UnitSpec
 import utils.InMemoryResponseConsumer
 
-class InMemoryResponseConsumerSpec extends UnitSpec with Matchers with GivenWhenThen with MockitoSugar {
+class InMemoryResponseConsumerSpec extends WordSpec with Matchers with GivenWhenThen with MockitoSugar {
   private val initialResponses: List[JsValue] = List(
     Json.parse("""{"fileReference": "my-first-reference", "batchId": "http://url.one", "outcome": "READY"}"""),
     Json.parse(

@@ -2,14 +2,13 @@ package service
 
 import java.time.LocalDate
 
-import org.scalatest.GivenWhenThen
+import org.scalatest.{GivenWhenThen, Matchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.{FakeHeaders, FakeRequest, Helpers}
 import play.api.test.Helpers._
-import uk.gov.hmrc.play.test.UnitSpec
 
-class EndToEndIntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with GivenWhenThen {
+class EndToEndIntegrationSpec extends WordSpec with Matchers with GuiceOneAppPerSuite with GivenWhenThen {
 
   "End To End Integration" should {
     "post 3 times to ListenerController and poll PollController for response" in {
