@@ -1,4 +1,3 @@
-import TestPhases.oneForkedJvmPerTest
 import scoverage.ScoverageKeys
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, scalaSettings}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
@@ -21,13 +20,14 @@ lazy val scoverageSettings = {
 }
 
 lazy val microservice = Project(appName, file("."))
-  .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin, SbtArtifactory)
+  .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
   .settings(
+    scalaVersion := "2.12.12",
     libraryDependencies              ++= AppDependencies.compile ++ AppDependencies.test() ++ AppDependencies.test("it"),
     evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
   )
   .settings(PlayKeys.playDefaultPort := 9577)
-  .settings(scalaSettings ++ scoverageSettings: _*)
+  .settings(scoverageSettings: _*)
   .settings(majorVersion := 2)
   .settings(
     publishingSettings: _*
@@ -37,7 +37,6 @@ lazy val microservice = Project(appName, file("."))
   .settings(
     Keys.fork in IntegrationTest                  := false,
     unmanagedSourceDirectories in IntegrationTest := (baseDirectory in IntegrationTest) (base => Seq(base / "it")).value,
-    testGrouping in IntegrationTest               := oneForkedJvmPerTest((definedTests in IntegrationTest).value),
     parallelExecution in IntegrationTest          := false,
     addTestReportOption(IntegrationTest, "int-test-reports")
   )

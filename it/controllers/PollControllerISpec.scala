@@ -2,14 +2,13 @@ package controllers
 
 import java.time.LocalDate
 
-import org.scalatest.GivenWhenThen
+import org.scalatest.{GivenWhenThen, Matchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.{FakeHeaders, FakeRequest, Helpers}
 import play.api.test.Helpers._
-import uk.gov.hmrc.play.test.UnitSpec
 
-class PollControllerISpec extends UnitSpec with GuiceOneAppPerSuite with GivenWhenThen {
+class PollControllerISpec extends WordSpec with Matchers with GuiceOneAppPerSuite with GivenWhenThen {
   "PollController" should {
     "clear all cached responses" in {
       Given("the service receives 3 POSTs to /listen")

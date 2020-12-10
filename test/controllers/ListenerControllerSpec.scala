@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,34 +16,32 @@
 
 package controllers
 
+import java.time.LocalDate
+
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import java.time.LocalDate
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{GivenWhenThen, Matchers}
+import org.scalatest.{GivenWhenThen, Matchers, WordSpec}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Result
+import play.api.test.Helpers.{stubMessagesControllerComponents, _}
 import play.api.test.{FakeRequest, Helpers}
-import uk.gov.hmrc.play.test.UnitSpec
 import utils.ResponseConsumer
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.duration._
 
-class ListenerControllerSpec extends UnitSpec with Matchers with GivenWhenThen with MockitoSugar {
+class ListenerControllerSpec extends WordSpec with Matchers with GivenWhenThen with MockitoSugar {
 
   implicit val actorSystem = ActorSystem()
   implicit val materializer = ActorMaterializer()
-  implicit val timeout: akka.util.Timeout = 10.seconds
 
   "ListenerController" should {
     "return OK and write to logs for POST for successful upload" in {
       Given("a request containing correctly formatted JSON and a valid download URL for successful upload")
       val responseConsumer = mock[ResponseConsumer]
-      val controller = new ListenerController(responseConsumer)
+      val controller = new ListenerController(responseConsumer, stubMessagesControllerComponents())
 
       val jsonCallback: JsValue = Json.parse(
         """{
@@ -69,7 +67,7 @@ class ListenerControllerSpec extends UnitSpec with Matchers with GivenWhenThen w
     "return OK and write to logs for POST for quarantined upload" in {
       Given("a request containing correctly formatted JSON and a valid download URL for quarantined upload")
       val responseConsumer = mock[ResponseConsumer]
-      val controller = new ListenerController(responseConsumer)
+      val controller = new ListenerController(responseConsumer, stubMessagesControllerComponents())
 
       val jsonCallback: JsValue = Json.parse(
         """{
@@ -95,7 +93,7 @@ class ListenerControllerSpec extends UnitSpec with Matchers with GivenWhenThen w
 
     "return BadRequest for a file that contains invalid body" in {
       Given("a request containing body content that cannot be parsed as JSON")
-      val controller = new ListenerController(mock[ResponseConsumer])
+      val controller = new ListenerController(mock[ResponseConsumer], stubMessagesControllerComponents())
 
       val request = FakeRequest().withTextBody("This is not JSON")
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package utils
 import java.time.LocalDate
 
 import model.ResponseLog
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.{JsObject, JsValue}
 import utils.logging.WithFileReference.withFileReferenceLogged
 
@@ -33,11 +33,11 @@ trait ResponseConsumer {
 
   def lookupResponseForReference(reference: String): Option[JsValue]
 
-  def clear()
+  def clear(): Unit
 }
 
 class InMemoryResponseConsumer(private var responsesDate: LocalDate, maximumQueueLength: Int = 10000)
-    extends ResponseConsumer {
+    extends ResponseConsumer with Logging {
 
   private val responseMap = TrieMap[String, JsValue]()
 
@@ -55,9 +55,9 @@ class InMemoryResponseConsumer(private var responsesDate: LocalDate, maximumQueu
           synchronized {
             responseQueue = responseQueue.enqueue(response)
           }
-          Logger.info(s"Added response: [$response].")
+          logger.info(s"Added response: [$response].")
         case None =>
-          Logger.warn(s"Unparseable callback $response")
+          logger.warn(s"Unparseable callback $response")
       }
     }
 
@@ -86,13 +86,13 @@ class InMemoryResponseConsumer(private var responsesDate: LocalDate, maximumQueu
     if (today.isAfter(responsesDate)) {
       responsesDate = today
       clear()
-      Logger.info(s"Resetting responses for new day: [$today].")
+      logger.info(s"Resetting responses for new day: [$today].")
     }
 
   override def lookupResponseForReference(reference: String): Option[JsValue] =
     responseMap.get(reference)
 
-  override def clear() = {
+  override def clear(): Unit = {
     synchronized {
       responseMap.clear()
       responseQueue = Queue.empty

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,26 +16,26 @@
 
 package controllers
 
+import java.time.LocalDate
+
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import model.ResponseLog
-import java.time.LocalDate
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{GivenWhenThen, Matchers}
+import org.scalatest.{GivenWhenThen, Matchers, WordSpec}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Result
+import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
-import uk.gov.hmrc.play.test.UnitSpec
 import utils.ResponseConsumer
 
 import scala.concurrent.Future
-import scala.concurrent.duration._
 
-class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with MockitoSugar {
+class PollControllerSpec extends WordSpec with Matchers with GivenWhenThen with MockitoSugar {
 
   implicit val actorSystem                = ActorSystem()
   implicit val materializer               = ActorMaterializer()
-  implicit val timeout: akka.util.Timeout = 10.seconds
+//  implicit val timeout: akka.util.Timeout = 10.seconds
 
   "PollController" should {
 
@@ -62,7 +62,7 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
         override def clear() = ???
       }
 
-      val controller = new PollController(responseConsumer)
+      val controller = new PollController(responseConsumer, stubMessagesControllerComponents())
 
       When("the poll method is called")
       val result: Future[Result] = controller.poll()(FakeRequest())
@@ -104,7 +104,7 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
         override def clear() = ???
       }
 
-      val controller = new PollController(responseConsumer)
+      val controller = new PollController(responseConsumer, stubMessagesControllerComponents())
 
       When("the poll method is called")
       val result: Future[Result] = controller.poll()(FakeRequest())
@@ -133,7 +133,7 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
         override def clear() = ???
       }
 
-      val controller = new PollController(responseConsumer)
+      val controller = new PollController(responseConsumer, stubMessagesControllerComponents())
 
       When("the lookup method is called")
       val result: Future[Result] = controller.lookup("my-first-reference")(FakeRequest())
@@ -163,7 +163,7 @@ class PollControllerSpec extends UnitSpec with Matchers with GivenWhenThen with 
         override def clear() = ???
       }
 
-      val controller = new PollController(responseConsumer)
+      val controller = new PollController(responseConsumer, stubMessagesControllerComponents())
 
       When("the lookup method is called")
       val result: Future[Result] = controller.lookup("my-first-reference")(FakeRequest())

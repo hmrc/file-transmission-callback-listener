@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,20 +18,23 @@ package controllers
 
 import javax.inject.Inject
 import play.api.libs.json.Json
-import play.api.mvc.{Action, Controller}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.ResponseConsumer
 
-class PollController @Inject()(events: ResponseConsumer) extends Controller {
-  def poll() = Action { implicit request =>
+class PollController @Inject()(events: ResponseConsumer,
+                               mcc: MessagesControllerComponents) extends BackendController(mcc) {
+
+  def poll(): Action[AnyContent] = Action {
     Ok(Json.toJson(events.retrieveResponses()))
   }
 
-  def lookup(reference: String) = Action { implicit request =>
+  def lookup(reference: String): Action[AnyContent] = Action {
     events.lookupResponseForReference(reference).map(Ok(_)).getOrElse(NotFound)
   }
 
-  def clear() = Action { implicit request =>
-    events.clear
+  def clear(): Action[AnyContent] = Action {
+    events.clear()
     SeeOther(controllers.routes.PollController.poll().url)
   }
 }
