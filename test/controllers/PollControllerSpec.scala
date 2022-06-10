@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,11 @@ package controllers
 import java.time.LocalDate
 
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import model.ResponseLog
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{GivenWhenThen, Matchers, WordSpec}
+import org.mockito.MockitoSugar
+import org.scalatest.GivenWhenThen
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Result
 import play.api.test.Helpers._
@@ -31,10 +32,9 @@ import utils.ResponseConsumer
 
 import scala.concurrent.Future
 
-class PollControllerSpec extends WordSpec with Matchers with GivenWhenThen with MockitoSugar {
+class PollControllerSpec extends AnyWordSpecLike with Matchers with GivenWhenThen with MockitoSugar {
 
   implicit val actorSystem                = ActorSystem()
-  implicit val materializer               = ActorMaterializer()
 //  implicit val timeout: akka.util.Timeout = 10.seconds
 
   "PollController" should {

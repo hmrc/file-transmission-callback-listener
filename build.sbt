@@ -1,45 +1,26 @@
-import scoverage.ScoverageKeys
-import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, scalaSettings}
+import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
-import uk.gov.hmrc.versioning.SbtGitVersioning.autoImport.majorVersion
 
 val appName = "file-transmission-callback-listener"
 
-lazy val scoverageSettings = {
-  Seq(
-    // Semicolon-separated list of regexs matching classes to exclude
-    ScoverageKeys.coverageExcludedPackages := "<empty>;Reverse.*;.*AuthService.*;models/.data/..*;view.*",
-    ScoverageKeys.coverageExcludedFiles :=
-      ".*/frontendGlobal.*;.*/frontendAppConfig.*;.*/frontendWiring.*;.*/views/.*_template.*;.*/govuk_wrapper.*;.*/routes_routing.*;.*/BuildInfo.*",
-    // Minimum is deliberately low to avoid failures initially - please increase as we add more coverage
-    ScoverageKeys.coverageMinimum := 25,
-    ScoverageKeys.coverageFailOnMinimum := false,
-    ScoverageKeys.coverageHighlighting := true,
-    parallelExecution in Test := false
-  )
-}
+val silencerVersion = "1.7.8"
 
 lazy val microservice = Project(appName, file("."))
-  .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
+  .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .settings(
-    scalaVersion := "2.12.12",
-    libraryDependencies              ++= AppDependencies.compile ++ AppDependencies.test() ++ AppDependencies.test("it"),
-    evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
+    majorVersion                     := 2,
+    scalaVersion                     := "2.13.8",
+    libraryDependencies              ++= AppDependencies.compile ++ AppDependencies.test,
+    // ***************
+    // Use the silencer plugin to suppress warnings
+    scalacOptions += "-P:silencer:pathFilters=routes",
+    libraryDependencies ++= Seq(
+      compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
+      "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
+    )
+    // ***************
   )
-  .settings(PlayKeys.playDefaultPort := 9577)
-  .settings(scoverageSettings: _*)
-  .settings(majorVersion := 2)
-  .settings(
-    publishingSettings: _*
-  )
+  .settings(publishingSettings: _*)
   .configs(IntegrationTest)
-  .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
-  .settings(
-    Keys.fork in IntegrationTest                  := false,
-    unmanagedSourceDirectories in IntegrationTest := (baseDirectory in IntegrationTest) (base => Seq(base / "it")).value,
-    parallelExecution in IntegrationTest          := false,
-    addTestReportOption(IntegrationTest, "int-test-reports")
-  )
-  .settings(
-    resolvers += Resolver.jcenterRepo
-  )
+  .settings(integrationTestSettings(): _*)
+  .settings(resolvers += Resolver.jcenterRepo)
