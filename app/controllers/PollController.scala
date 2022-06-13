@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,6 @@ class PollController @Inject()(events: ResponseConsumer,
 
   def clear(): Action[AnyContent] = Action {
     events.clear()
-    SeeOther(controllers.routes.PollController.poll().url)
+    SeeOther(controllers.routes.PollController.poll.url)
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,11 @@ package controllers
 import java.time.LocalDate
 
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{GivenWhenThen, Matchers, WordSpec}
+import org.mockito.{Mockito, MockitoSugar}
+import org.scalatest.GivenWhenThen
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Result
 import play.api.test.Helpers.{stubMessagesControllerComponents, _}
@@ -32,10 +32,9 @@ import utils.ResponseConsumer
 
 import scala.concurrent.Future
 
-class ListenerControllerSpec extends WordSpec with Matchers with GivenWhenThen with MockitoSugar {
+class ListenerControllerSpec extends AnyWordSpecLike with Matchers with GivenWhenThen with MockitoSugar {
 
   implicit val actorSystem = ActorSystem()
-  implicit val materializer = ActorMaterializer()
 
   "ListenerController" should {
     "return OK and write to logs for POST for successful upload" in {

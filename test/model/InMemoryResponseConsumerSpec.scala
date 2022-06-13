@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,14 @@ package model
 
 import java.time.LocalDate
 
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{GivenWhenThen, Matchers, WordSpec}
+import org.mockito.MockitoSugar
+import org.scalatest.GivenWhenThen
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsValue, Json}
 import utils.InMemoryResponseConsumer
 
-class InMemoryResponseConsumerSpec extends WordSpec with Matchers with GivenWhenThen with MockitoSugar {
+class InMemoryResponseConsumerSpec extends AnyWordSpecLike with Matchers with GivenWhenThen with MockitoSugar {
   private val initialResponses: List[JsValue] = List(
     Json.parse("""{"fileReference": "my-first-reference", "batchId": "http://url.one", "outcome": "READY"}"""),
     Json.parse(
@@ -69,7 +71,7 @@ class InMemoryResponseConsumerSpec extends WordSpec with Matchers with GivenWhen
 
       Then("the expected response log should be returned")
       val updatedResponses = initialResponses :+ newResponse
-      consumer.retrieveResponses shouldBe ResponseLog(initialDate, updatedResponses)
+      consumer.retrieveResponses() shouldBe ResponseLog(initialDate, updatedResponses)
     }
 
     "allow to lookup for added events by reference" in {
