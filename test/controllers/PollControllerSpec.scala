@@ -18,7 +18,7 @@ package controllers
 
 import java.time.LocalDate
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import model.ResponseLog
 import org.mockito.MockitoSugar
 import org.scalatest.GivenWhenThen
@@ -35,7 +35,7 @@ import scala.concurrent.Future
 class PollControllerSpec extends AnyWordSpecLike with Matchers with GivenWhenThen with MockitoSugar {
 
   implicit val actorSystem                = ActorSystem()
-//  implicit val timeout: akka.util.Timeout = 10.seconds
+//  implicit val timeout: org.apache.pekko.util.Timeout = 10.seconds
 
   "PollController" should {
 
