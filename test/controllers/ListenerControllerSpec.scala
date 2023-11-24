@@ -18,7 +18,7 @@ package controllers
 
 import java.time.LocalDate
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import org.mockito.ArgumentMatchers.any
 import org.mockito.{Mockito, MockitoSugar}
 import org.scalatest.GivenWhenThen
