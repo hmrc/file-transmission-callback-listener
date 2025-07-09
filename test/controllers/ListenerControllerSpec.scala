@@ -16,31 +16,35 @@
 
 package controllers
 
-import java.time.LocalDate
-
 import org.apache.pekko.actor.ActorSystem
 import org.mockito.ArgumentMatchers.any
-import org.mockito.{Mockito, MockitoSugar}
+import org.mockito.Mockito
 import org.scalatest.GivenWhenThen
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Result
-import play.api.test.Helpers.{stubMessagesControllerComponents, _}
+import play.api.test.Helpers.*
 import play.api.test.{FakeRequest, Helpers}
 import utils.ResponseConsumer
 
+import java.time.LocalDate
 import scala.concurrent.Future
 
-class ListenerControllerSpec extends AnyWordSpecLike with Matchers with GivenWhenThen with MockitoSugar {
+class ListenerControllerSpec
+  extends AnyWordSpec
+     with Matchers
+     with GivenWhenThen
+     with MockitoSugar {
 
-  implicit val actorSystem = ActorSystem()
+  given ActorSystem = ActorSystem()
 
   "ListenerController" should {
     "return OK and write to logs for POST for successful upload" in {
       Given("a request containing correctly formatted JSON and a valid download URL for successful upload")
       val responseConsumer = mock[ResponseConsumer]
-      val controller = new ListenerController(responseConsumer, stubMessagesControllerComponents())
+      val controller = ListenerController(responseConsumer, stubMessagesControllerComponents())
 
       val jsonCallback: JsValue = Json.parse(
         """{
@@ -66,7 +70,7 @@ class ListenerControllerSpec extends AnyWordSpecLike with Matchers with GivenWhe
     "return OK and write to logs for POST for quarantined upload" in {
       Given("a request containing correctly formatted JSON and a valid download URL for quarantined upload")
       val responseConsumer = mock[ResponseConsumer]
-      val controller = new ListenerController(responseConsumer, stubMessagesControllerComponents())
+      val controller = ListenerController(responseConsumer, stubMessagesControllerComponents())
 
       val jsonCallback: JsValue = Json.parse(
         """{
@@ -92,7 +96,7 @@ class ListenerControllerSpec extends AnyWordSpecLike with Matchers with GivenWhe
 
     "return BadRequest for a file that contains invalid body" in {
       Given("a request containing body content that cannot be parsed as JSON")
-      val controller = new ListenerController(mock[ResponseConsumer], stubMessagesControllerComponents())
+      val controller = ListenerController(mock[ResponseConsumer], stubMessagesControllerComponents())
 
       val request = FakeRequest().withTextBody("This is not JSON")
 

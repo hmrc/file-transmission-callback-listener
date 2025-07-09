@@ -18,10 +18,10 @@ package model
 
 import java.time.LocalDate
 
-import org.mockito.MockitoSugar
 import org.scalatest.GivenWhenThen
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.{JsValue, Json}
 import utils.InMemoryResponseConsumer
 
@@ -39,7 +39,7 @@ class InMemoryResponseConsumerSpec extends AnyWordSpecLike with Matchers with Gi
     "initialize with the date and populated list passed in" in {
       When("an InMemoryResponseConsumer is created with a date and a populated list")
 
-      val consumer = new InMemoryResponseConsumer(initialDate)
+      val consumer = InMemoryResponseConsumer(initialDate)
 
       And("there are some initial responses")
       initialResponses.foreach(response => consumer.addResponse(response, initialDate))
@@ -51,7 +51,7 @@ class InMemoryResponseConsumerSpec extends AnyWordSpecLike with Matchers with Gi
     "initialize with the date and empty list passed in" in {
       When("an InMemoryResponseConsumer is created with a date and a populated list")
       val initialDate = LocalDate.parse("2018-03-16")
-      val consumer    = new InMemoryResponseConsumer(initialDate)
+      val consumer    = InMemoryResponseConsumer(initialDate)
 
       Then("the expected response log should be returned")
       consumer.retrieveResponses() shouldBe ResponseLog(initialDate, Nil)
@@ -59,7 +59,7 @@ class InMemoryResponseConsumerSpec extends AnyWordSpecLike with Matchers with Gi
 
     "append event to log if current date is same day as log day" in {
       Given("an InMemoryResponseConsumer with a date and a populated list")
-      val consumer = new InMemoryResponseConsumer(initialDate)
+      val consumer = InMemoryResponseConsumer(initialDate)
 
       And("there are some initial responses")
       initialResponses.foreach(response => consumer.addResponse(response, initialDate))
@@ -76,7 +76,7 @@ class InMemoryResponseConsumerSpec extends AnyWordSpecLike with Matchers with Gi
 
     "allow to lookup for added events by reference" in {
       Given("an InMemoryResponseConsumer with a date")
-      val consumer = new InMemoryResponseConsumer(initialDate)
+      val consumer = InMemoryResponseConsumer(initialDate)
 
       And("there are some initial responses")
       initialResponses.foreach(response => consumer.addResponse(response, initialDate))
@@ -94,7 +94,7 @@ class InMemoryResponseConsumerSpec extends AnyWordSpecLike with Matchers with Gi
 
     "purge the oldest messages if reached queue size limit" in {
       Given("an InMemoryResponseConsumer with a date and a populated list")
-      val consumer = new InMemoryResponseConsumer(initialDate, maximumQueueLength = 3)
+      val consumer = InMemoryResponseConsumer(initialDate, maximumQueueLength = 3)
 
       And("there are some initial responses - up to the limit")
       initialResponses.foreach(response => consumer.addResponse(response, initialDate))
@@ -115,7 +115,7 @@ class InMemoryResponseConsumerSpec extends AnyWordSpecLike with Matchers with Gi
 
     "reset whole queue if event current date is greater than log day" in {
       Given("an InMemoryResponseConsumer with a date")
-      val consumer = new InMemoryResponseConsumer(initialDate)
+      val consumer = InMemoryResponseConsumer(initialDate)
 
       And("there are some initial responses")
       initialResponses.foreach(response => consumer.addResponse(response, initialDate))
