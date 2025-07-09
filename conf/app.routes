@@ -1,6 +1,6 @@
 # microservice specific routes
 
-POST        /listen             @controllers.ListenerController.listen
-GET         /poll               @controllers.PollController.poll
+POST        /listen             @controllers.ListenerController.listen()
+GET         /poll               @controllers.PollController.poll()
 GET         /poll/:reference    @controllers.PollController.lookup(reference : String)
-GET         /clear              @controllers.PollController.clear
+GET         /clear              @controllers.PollController.clear()

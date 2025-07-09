@@ -16,30 +16,30 @@
 
 package controllers
 
-import java.time.LocalDate
-
-import javax.inject.Inject
 import play.api.Logging
 import play.api.mvc.Results.EmptyContent
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.ResponseConsumer
 
-class ListenerController @Inject()(responseConsumer: ResponseConsumer,
-                                   mcc: MessagesControllerComponents)
-    extends BackendController(mcc) with Logging {
+import java.time.LocalDate
+import javax.inject.Inject
 
-  def listen(): Action[AnyContent] = Action { implicit request =>
-    logger.debug(s"Received request with body: [${request.body.toString}].")
+class ListenerController @Inject()(
+  responseConsumer: ResponseConsumer,
+  mcc             : MessagesControllerComponents
+) extends BackendController(mcc) with Logging {
 
-    request.body.asJson match {
-      case Some(json) =>
-        responseConsumer.addResponse(json, LocalDate.now())
-        Ok(json)
-      case None =>
-        logger.error(s"Request body cannot be parsed as JSON, request body is: ${request.body.toString}")
-        BadRequest(EmptyContent())
+  def listen(): Action[AnyContent] =
+    Action { implicit request =>
+      logger.debug(s"Received request with body: [${request.body.toString}].")
+
+      request.body.asJson match
+        case Some(json) =>
+          responseConsumer.addResponse(json, LocalDate.now())
+          Ok(json)
+        case None =>
+          logger.error(s"Request body cannot be parsed as JSON, request body is: ${request.body.toString}")
+          BadRequest(EmptyContent())
     }
-  }
-
 }

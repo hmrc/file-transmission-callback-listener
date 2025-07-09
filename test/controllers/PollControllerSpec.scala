@@ -20,10 +20,10 @@ import java.time.LocalDate
 
 import org.apache.pekko.actor.ActorSystem
 import model.ResponseLog
-import org.mockito.MockitoSugar
 import org.scalatest.GivenWhenThen
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Result
 import play.api.test.Helpers._
@@ -32,37 +32,43 @@ import utils.ResponseConsumer
 
 import scala.concurrent.Future
 
-class PollControllerSpec extends AnyWordSpecLike with Matchers with GivenWhenThen with MockitoSugar {
+class PollControllerSpec
+  extends AnyWordSpec
+     with Matchers
+     with GivenWhenThen
+     with MockitoSugar {
 
-  implicit val actorSystem                = ActorSystem()
-//  implicit val timeout: org.apache.pekko.util.Timeout = 10.seconds
+  given ActorSystem = ActorSystem()
 
   "PollController" should {
-
     "return successful responses entries from local log" in {
-
       Given("a controller and entries in the local log")
       val responseConsumer = new ResponseConsumer {
-        override def addResponse(response: JsValue, currentDate: LocalDate): Unit = ???
+        override def addResponse(response: JsValue, currentDate: LocalDate): Unit =
+          ???
 
-        override def retrieveResponses: ResponseLog = ResponseLog(
-          currentDate = LocalDate.parse("2018-03-16"),
-          responses = List(
-            Json.obj("fileReference" -> "my-first-reference", "batchId" -> "B1", "outcome" -> "READY"),
-            Json.obj(
-              "fileReference"        -> "my-second-reference",
-              "batchId"              -> "B2",
-              "errorDetails"         -> "Something went wrong",
-              "outcome"              -> "FAILED"),
-            Json.obj("fileReference" -> "my-third-reference", "batchId" -> "B3", "outcome" -> "READY")
+        override def retrieveResponses(): ResponseLog =
+          ResponseLog(
+            currentDate = LocalDate.parse("2018-03-16"),
+            responses = List(
+              Json.obj("fileReference" -> "my-first-reference", "batchId" -> "B1", "outcome" -> "READY"),
+              Json.obj(
+                "fileReference"        -> "my-second-reference",
+                "batchId"              -> "B2",
+                "errorDetails"         -> "Something went wrong",
+                "outcome"              -> "FAILED"),
+              Json.obj("fileReference" -> "my-third-reference", "batchId" -> "B3", "outcome" -> "READY")
+            )
           )
-        )
 
-        override def lookupResponseForReference(reference: String): Option[JsValue] = ???
-        override def clear() = ???
+        override def lookupResponseForReference(reference: String): Option[JsValue] =
+          ???
+
+        override def clear(): Unit =
+          ???
       }
 
-      val controller = new PollController(responseConsumer, stubMessagesControllerComponents())
+      val controller = PollController(responseConsumer, stubMessagesControllerComponents())
 
       When("the poll method is called")
       val result: Future[Result] = controller.poll()(FakeRequest())
@@ -93,18 +99,22 @@ class PollControllerSpec extends AnyWordSpecLike with Matchers with GivenWhenThe
     }
 
     "return successful from empty local log" in {
-
       Given("a controller and NO entries in the local log")
       val responseConsumer = new ResponseConsumer {
-        override def addResponse(response: JsValue, currentDate: LocalDate): Unit = ()
+        override def addResponse(response: JsValue, currentDate: LocalDate): Unit =
+          ()
 
-        override def retrieveResponses: ResponseLog = ResponseLog(LocalDate.parse("2018-03-16"), Nil)
+        override def retrieveResponses(): ResponseLog =
+          ResponseLog(LocalDate.parse("2018-03-16"), Nil)
 
-        override def lookupResponseForReference(reference: String): Option[JsValue] = ???
-        override def clear() = ???
+        override def lookupResponseForReference(reference: String): Option[JsValue] =
+          ???
+
+        override def clear(): Unit =
+          ???
       }
 
-      val controller = new PollController(responseConsumer, stubMessagesControllerComponents())
+      val controller = PollController(responseConsumer, stubMessagesControllerComponents())
 
       When("the poll method is called")
       val result: Future[Result] = controller.poll()(FakeRequest())
@@ -122,18 +132,22 @@ class PollControllerSpec extends AnyWordSpecLike with Matchers with GivenWhenThe
     }
 
     "lookup for existing response in local log" in {
-
       Given("a controller and entries in the local log")
       val responseConsumer = new ResponseConsumer {
-        override def addResponse(response: JsValue, currentDate: LocalDate): Unit = ???
+        override def addResponse(response: JsValue, currentDate: LocalDate): Unit =
+          ???
 
-        override def retrieveResponses: ResponseLog = ???
+        override def retrieveResponses(): ResponseLog =
+          ???
+
         override def lookupResponseForReference(reference: String): Option[JsValue] =
           Some(Json.obj("fileReference" -> reference, "batchId" -> "B1", "outcome" -> "READY"))
-        override def clear() = ???
+
+        override def clear(): Unit =
+          ???
       }
 
-      val controller = new PollController(responseConsumer, stubMessagesControllerComponents())
+      val controller = PollController(responseConsumer, stubMessagesControllerComponents())
 
       When("the lookup method is called")
       val result: Future[Result] = controller.lookup("my-first-reference")(FakeRequest())
@@ -142,35 +156,39 @@ class PollControllerSpec extends AnyWordSpecLike with Matchers with GivenWhenThe
       status(result) shouldBe 200
 
       And("the event should be returned as JSON")
-      Helpers.contentAsJson(result) shouldBe Json.parse("""
-                                                          |{
-                                                          |		"fileReference": "my-first-reference",
-                                                          |		"batchId": "B1",
-                                                          |		"outcome": "READY"
-                                                          |}
-                                                        """.stripMargin)
-
+      Helpers.contentAsJson(result) shouldBe Json.parse(
+        """
+          |{
+          |	 "fileReference": "my-first-reference",
+          |	 "batchId": "B1",
+          |	 "outcome": "READY"
+          |}
+        """.stripMargin)
     }
 
     "return not found if response not found in local log" in {
-
       Given("a controller and entries in the local log")
       val responseConsumer = new ResponseConsumer {
-        override def addResponse(response: JsValue, currentDate: LocalDate): Unit = ???
+        override def addResponse(response: JsValue, currentDate: LocalDate): Unit =
+          ???
 
-        override def retrieveResponses: ResponseLog                                 = ???
-        override def lookupResponseForReference(reference: String): Option[JsValue] = None
-        override def clear() = ???
+        override def retrieveResponses(): ResponseLog =
+          ???
+
+        override def lookupResponseForReference(reference: String): Option[JsValue] =
+          None
+
+        override def clear(): Unit =
+          ???
       }
 
-      val controller = new PollController(responseConsumer, stubMessagesControllerComponents())
+      val controller = PollController(responseConsumer, stubMessagesControllerComponents())
 
       When("the lookup method is called")
       val result: Future[Result] = controller.lookup("my-first-reference")(FakeRequest())
 
       Then("the service should return OK")
       status(result) shouldBe 404
-
     }
   }
 }

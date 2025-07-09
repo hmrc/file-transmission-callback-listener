@@ -49,7 +49,7 @@ class InMemoryResponseConsumer(private var responsesDate: LocalDate, maximumQueu
       dropOldestOnes()
       val reference: Option[String] = getReference(response)
 
-      reference match {
+      reference match
         case Some(existingReference) =>
           responseMap.put(existingReference, response)
           synchronized {
@@ -58,14 +58,12 @@ class InMemoryResponseConsumer(private var responsesDate: LocalDate, maximumQueu
           logger.info(s"Added response: [$response].")
         case None =>
           logger.warn(s"Unparseable callback $response")
-      }
     }
 
   private def getReference(response: JsValue) =
-    response match {
+    response match
       case JsObject(fields) => fields.get("fileReference").flatMap(_.asOpt[String])
       case _                => None
-    }
 
   // NOTE: Can return stale results from a previous day -- iff the day has changed and no new responses have yet been received for the current day.
   override def retrieveResponses(): ResponseLog =

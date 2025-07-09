@@ -20,13 +20,17 @@ import java.time.LocalDate
 
 import org.scalatest.GivenWhenThen
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.{FakeHeaders, FakeRequest, Helpers}
 import play.api.test.Helpers._
 
-class EndToEndIntegrationSpec extends AnyWordSpecLike with Matchers with GuiceOneAppPerSuite with GivenWhenThen {
+class EndToEndIntegrationSpec
+  extends AnyWordSpec
+     with Matchers
+     with GuiceOneAppPerSuite
+     with GivenWhenThen {
 
   "End To End Integration" should {
     "post 3 times to ListenerController and poll PollController for response" in {

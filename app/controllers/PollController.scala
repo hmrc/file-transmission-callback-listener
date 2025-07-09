@@ -16,25 +16,31 @@
 
 package controllers
 
-import javax.inject.Inject
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.ResponseConsumer
 
-class PollController @Inject()(events: ResponseConsumer,
-                               mcc: MessagesControllerComponents) extends BackendController(mcc) {
+import javax.inject.Inject
 
-  def poll(): Action[AnyContent] = Action {
-    Ok(Json.toJson(events.retrieveResponses()))
-  }
+class PollController @Inject()(
+  events: ResponseConsumer,
+  mcc   : MessagesControllerComponents
+) extends BackendController(mcc) {
 
-  def lookup(reference: String): Action[AnyContent] = Action {
-    events.lookupResponseForReference(reference).map(Ok(_)).getOrElse(NotFound)
-  }
+  def poll(): Action[AnyContent] =
+    Action {
+      Ok(Json.toJson(events.retrieveResponses()))
+    }
 
-  def clear(): Action[AnyContent] = Action {
-    events.clear()
-    SeeOther(controllers.routes.PollController.poll.url)
-  }
+  def lookup(reference: String): Action[AnyContent] =
+    Action {
+      events.lookupResponseForReference(reference).map(Ok(_)).getOrElse(NotFound)
+    }
+
+  def clear(): Action[AnyContent] =
+    Action {
+      events.clear()
+      SeeOther(controllers.routes.PollController.poll().url)
+    }
 }
